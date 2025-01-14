@@ -1,0 +1,41 @@
+﻿[Script Info]
+Title: SSA/ASS Test
+Original Script: Ian Baker (ibaker@google.com)
+Script Type: V4.00+
+PlayResX: 1280
+PlayResY: 720
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: TopLeft     ,Roboto,50,&H00FFFFF0,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,7,50,50,70,1
+Style: TopCentre   ,Roboto,50,&H00FFFF0F,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,8,50,50,70,1
+Style: TopRight    ,Roboto,50,&H00FFF0FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,9,50,50,70,1
+Style: MiddleLeft  ,Roboto,50,&H00FF0FFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,4,50,50,70,1
+Style: MiddleCentre,Roboto,50,&H00F0FFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,5,50,50,70,1
+Style: MiddleRight ,Roboto,50,&H000FFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,6,50,50,70,1
+Style: BottomLeft  ,Roboto,50,&H00F0FFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,1,50,50,70,1
+Style: BottomCentre,Roboto,50,&H00FF0FFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,2,50,50,70,1
+Style: BottomRight ,Roboto,50,&H00FFF0FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,3,0,3,50,50,70,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.95,0:00:03.11,TopLeft     ,Larry,0,0,0,,Top-left 左上.\NSecond line.
+Dialogue: 0,0:00:04.11,0:00:07.96,TopCentre   ,Larry,0,0,0,,Top-centre 上中.\NSecond line.
+Dialogue: 0,0:00:08.96,0:00:11.99,TopRight    ,Larry,0,0,0,,Top-right 右上.\NSecond line.
+Dialogue: 0,0:00:12.31,0:00:15.88,MiddleLeft  ,Larry,0,0,0,,Middle-left 左中.\NSecond line.
+Dialogue: 0,0:00:16.36,0:00:19.61,MiddleCentre,Larry,0,0,0,,Middle-centre 居中.\NSecond line.
+Dialogue: 0,0:00:20.61,0:00:23.11,MiddleRight ,Larry,0,0,0,,Middle-right 右中.\NSecond line.
+Dialogue: 0,0:00:24.21,0:00:27.96,BottomLeft  ,Larry,0,0,0,,Bottom-left 左下.\NSecond line.
+Dialogue: 0,0:00:28.39,0:00:31.61,BottomCentre,Larry,0,0,0,,Bottom-centre 下中.\NSecond line.
+Dialogue: 0,0:00:32.39,0:00:35.61,BottomRight ,Larry,0,0,0,,Bottom-right 右下.\NSecond line.
+Dialogue: 0,0:00:34.39,0:00:35.61,BottomRight ,Larry,0,0,0,,{\an5}Override to middle-centre.
+Dialogue: 0,0:00:36.44,0:00:42.41,TopLeft     ,Larry,0,0,0,,{\pos(700,150)} Position (700,150)\Ntop-left alignment.
+Dialogue: 0,0:00:37.44,0:00:42.41,TopRight    ,Larry,0,0,0,,{\pos(700,150)} Position (700,150)\Ntop-right alignment.
+Dialogue: 0,0:00:38.44,0:00:42.41,BottomLeft  ,Larry,0,0,0,,{\pos(700,150)} Position (700,150)\Nbottom-left alignment.
+Dialogue: 0,0:00:39.44,0:00:42.41,BottomRight ,Larry,0,0,0,,{\pos(700,150)} Position (700,150)\Nbottom-right alignment.
+Dialogue: 0,0:00:43.44,0:00:46.41,TopLeft     ,Larry,0,0,0,,{\move(700,150,700,300)} Move (700,150,700,300)\Ntop-left alignment.
+Dialogue: 0,0:00:43.44,0:00:46.41,TopRight    ,Larry,0,0,0,,{\move(700,150,700,300)} Move (700,150,700,300)\Ntop-right alignment.
+Dialogue: 0,0:00:43.44,0:00:46.41,BottomLeft  ,Larry,0,0,0,,{\move(700,150,700,300)} Move (700,150,700,300)\Nbottom-left alignment.
+Dialogue: 0,0:00:43.44,0:00:46.41,BottomRight ,Larry,0,0,0,,{\move(700,150,700,300)} Move (700,150,700,300)\Nbottom-right alignment.
+Dialogue: 0,0:00:47.44,0:00:50.41,BottomCentre,Larry,0,0,0,,Literal braces and backslashes: \{ \} \ \\.
+Dialogue: 0,0:00:51.44,0:00:54.41,BottomCentre,Larry,0,0,0,,{\pos(-5,100))} Negative \pos ignored.
