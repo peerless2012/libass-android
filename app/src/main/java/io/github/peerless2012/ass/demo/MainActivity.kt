@@ -25,7 +25,7 @@ import okhttp3.OkHttpClient
 class MainActivity : AppCompatActivity() {
 
 //    private val url = "http://192.168.0.254:8096/Videos/f5eff7c7-53de-684c-36cd-f4c7cefc99e3/stream?static=true&mediaSourceId=f5eff7c753de684c36cdf4c7cefc99e3&streamOptions=%7B%7D"
-    private val url = "http://192.168.0.26:8080/files/a.mkv"
+    private val url = "http://192.168.0.26:8080/files/c.mkv"
 
     private lateinit var player:ExoPlayer
 
@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity() {
 
     @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

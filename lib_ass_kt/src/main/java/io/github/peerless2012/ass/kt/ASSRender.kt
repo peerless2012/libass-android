@@ -21,6 +21,9 @@ class ASSRender(nativeAss: Long) {
         external fun nativeAssRenderSetFontScale(render: Long, scale: Float)
 
         @JvmStatic
+        external fun nativeAssRenderSetStorageSize(render: Long, width: Int, height: Int)
+
+        @JvmStatic
         external fun nativeAssRenderSetFrameSize(render: Long, width: Int, height: Int)
 
         @JvmStatic
@@ -40,6 +43,10 @@ class ASSRender(nativeAss: Long) {
 
     public fun setFontScale(scale: Float) {
         nativeAssRenderSetFontScale(nativeRender, scale)
+    }
+
+    public fun setStorageSize(width: Int, height: Int) {
+        nativeAssRenderSetStorageSize(nativeRender, width, height)
     }
 
     public fun setFrameSize(width: Int, height: Int) {

@@ -142,6 +142,10 @@ void nativeAssRenderSetFrameSize(JNIEnv* env, jclass clazz, jlong render, jint w
     ass_set_frame_size((ASS_Renderer *) render, width, height);
 }
 
+void nativeAssRenderSetStorageSize(JNIEnv* env, jclass clazz, jlong render, jint width, jint height) {
+    ass_set_storage_size((ASS_Renderer *) render, width, height);
+}
+
 jobject createBitmap(JNIEnv* env, const ASS_Image* image) {
     jclass bitmapConfigClass = (*env)->FindClass(env, "android/graphics/Bitmap$Config");
     jfieldID argb8888FieldID = (*env)->GetStaticFieldID(env, bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
@@ -160,22 +164,19 @@ jobject createBitmap(JNIEnv* env, const ASS_Image* image) {
         AndroidBitmap_unlockPixels(env, bitmap);
         return NULL;
     }
+
     int stride = image->stride;
+    unsigned int r = (image->color >> 24) & 0xFF;
+    unsigned int g = (image->color >> 16) & 0xFF;
+    unsigned int b = (image->color >> 8) & 0xFF;
+    unsigned int opacity = 0xFF - image->color & 0xFF;
     for (int y = 0; y < image->h; ++y) {
         uint32_t *line = (uint32_t *)((char *)bitmapPixels + (y) * info.stride);
         for (int x = 0; x < image->w; ++x) {
-            unsigned char alpha = image->bitmap[y * stride + x];
-//            unsigned char r = image->color & 0xFF;
-//            unsigned char g = (image->color >> 8) & 0xFF;
-//            unsigned char b = (image->color >> 16) & 0xFF;
-//            unsigned char a = (image->color >> 24) & 0xFF;
-//            line[x] = (alpha << 24) | (r << 16) | (g << 8) | b;
-            uint8_t a = (image->color >> 24) & 0xFF; // 高 8 位
-            uint8_t r = (image->color >> 16) & 0xFF; // 次高 8 位
-            uint8_t g = (image->color >> 8)  & 0xFF; // 次低 8 位
-            uint8_t b  = image->color & 0xFF;         // 低 8 位
+            unsigned alpha = image->bitmap[y * stride + x];
             if (alpha > 0) {
-                line[x] = (a << 24) | (r << 16) | (g << 8) | b;
+                // ABGR
+                line[x] = ((opacity * alpha) / 255) << 24 | (b << 16) | (g << 8) | r;
             } else {
                 line[x] = 0;
             }
@@ -233,6 +234,7 @@ void nativeAssRenderDeinit(JNIEnv* env, jclass clazz, jlong render) {
 static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderInit", "(J)J", (void*)nativeAssRenderInit},
         {"nativeAssRenderSetFontScale", "(JF)V", (void*)nativeAssRenderSetFontScale},
+        {"nativeAssRenderSetStorageSize", "(JII)V", (void*) nativeAssRenderSetStorageSize},
         {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
         {"nativeAssRenderReadFrames", "(JJJ)[Lio/github/peerless2012/ass/kt/ASSTex;", (void*)nativeAssRenderReadFrame},
         {"nativeAssRenderDeinit", "(J)V", (void*)nativeAssRenderDeinit},
