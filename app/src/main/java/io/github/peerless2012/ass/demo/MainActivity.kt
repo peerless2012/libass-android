@@ -16,6 +16,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
+import io.github.peerless2012.ass.AssKeeper
 import io.github.peerless2012.ass.factory.AssRenderFactory
 import io.github.peerless2012.ass.factory.AssSubtitleParserFactory
 import okhttp3.OkHttp
@@ -47,10 +48,12 @@ class MainActivity : AppCompatActivity() {
         val okHttpClient = OkHttpClient.Builder()
             .build()
         playerView = findViewById(R.id.main_player)
+        val assKeeper = AssKeeper()
         player = ExoPlayer.Builder(this)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(OkHttpDataSource.Factory(okHttpClient)).setSubtitleParserFactory(AssSubtitleParserFactory()))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(OkHttpDataSource.Factory(okHttpClient)).setSubtitleParserFactory(AssSubtitleParserFactory(assKeeper)))
             .setRenderersFactory(AssRenderFactory(baseContext))
             .build()
+        player.addListener(assKeeper)
         playerView.player = player
         player.setMediaItem(MediaItem.fromUri(url))
         player.prepare()

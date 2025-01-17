@@ -7,9 +7,9 @@ import androidx.media3.common.text.Cue
 import androidx.media3.common.util.Consumer
 import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.SubtitleParser
-import io.github.peerless2012.ass.kt.Ass
+import io.github.peerless2012.ass.AssKeeper
 
-val ass = Ass()
+
 
 /**
  * @Author peerless2012
@@ -25,19 +25,12 @@ class AssParser: SubtitleParser {
 
     private val haveInitializationData: Boolean
 
-    private val track = ass.createTrack()
+    private val assKeeper: AssKeeper
 
-    private val renderWidth = 1920;
+    constructor(assKeeper: AssKeeper): this(assKeeper, null)
 
-    private val renderHeight = 1080;
-
-    private val render = ass.createRender().also {
-        it.setTrack(track)
-    }
-
-    constructor(): this(null)
-
-    constructor(initializationData: List<ByteArray>?) {
+    constructor(assKeeper: AssKeeper, initializationData: List<ByteArray>?) {
+        this.assKeeper = assKeeper
         if (!initializationData.isNullOrEmpty()) {
             haveInitializationData = true
             val format = String(initializationData[0], Charsets.UTF_8)
@@ -51,10 +44,7 @@ class AssParser: SubtitleParser {
                 lines[index+1] = format
             }
             val result = lines.joinToString(separator = "\n")
-            track.readBuffer(result.toByteArray())
-            render.setFontScale(2.0f)
-            render.setStorageSize(1920, 1080)
-            render.setFrameSize(renderWidth, renderHeight)
+            assKeeper.track.readBuffer(result.toByteArray())
         } else {
             haveInitializationData = false
         }
@@ -77,24 +67,24 @@ class AssParser: SubtitleParser {
             val frames = matchResult.groupValues[2]
             "$timePart.$frames"
         }
-        track.readBuffer(newText.toByteArray())
-        val events = track.getEvents()
+        assKeeper.track.readBuffer(newText.toByteArray())
+        val events = assKeeper.track.getEvents()
         val cues= mutableListOf<Cue>()
         val startTimesUs: List<Long> = ArrayList()
         Log.i("AssParser", string)
         events?.forEach {event ->
             Log.i("AssParser", "event : " + event)
-            val texs = render.readFrames(event.start)
+            val texs = assKeeper.render.readFrames(event.start)
             texs?.forEach { tex ->
                 Log.i("AssParser", "tex : x = " + tex.x + ", y = " + tex.y + ", width = " + tex.bitmap.width + ", height = " + tex.bitmap.height)
                 val cue = Cue.Builder()
                     .setBitmap(tex.bitmap)
-                    .setPosition(tex.x / 1920f)
+                    .setPosition(tex.x / assKeeper.width.toFloat())
                     .setPositionAnchor(Cue.ANCHOR_TYPE_START)
-                    .setLine(tex.y / 1080f, Cue.LINE_TYPE_FRACTION)
+                    .setLine(tex.y / assKeeper.height.toFloat(), Cue.LINE_TYPE_FRACTION)
                     .setLineAnchor(Cue.ANCHOR_TYPE_START)
-                    .setSize(tex.bitmap.width / 1920f)
-                    .setBitmapHeight(tex.bitmap.height / 1080f)
+                    .setSize(tex.bitmap.width / assKeeper.width.toFloat())
+                    .setBitmapHeight(tex.bitmap.height / assKeeper.height.toFloat())
                     .build()
                 cues.add(cue)
             }
@@ -103,7 +93,7 @@ class AssParser: SubtitleParser {
                 output.accept(cwt)
             }
         }
-        track.clearEvent()
+        assKeeper.track.clearEvent()
     }
 
     override fun getCueReplacementBehavior(): Int {
