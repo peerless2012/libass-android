@@ -19,6 +19,12 @@ class Ass {
         external fun nativeAssInit(): Long
 
         @JvmStatic
+        external fun nativeAssAddFont(ptr: Long, name: String, buffer: ByteArray)
+
+        @JvmStatic
+        external fun nativeAssClearFont(ptr: Long)
+
+        @JvmStatic
         external fun nativeAssDeinit(ptr: Long)
 
     }
@@ -31,6 +37,14 @@ class Ass {
 
     public fun createRender(): ASSRender {
         return ASSRender(nativeAss)
+    }
+
+    public fun addFont(name: String, buffer: ByteArray) {
+        nativeAssAddFont(nativeAss, name, buffer)
+    }
+
+    public fun clearFont() {
+        nativeAssClearFont(nativeAss)
     }
 
     protected fun finalize() {

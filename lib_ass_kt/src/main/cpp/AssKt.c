@@ -21,6 +21,23 @@ jlong nativeAssInit(JNIEnv* env, jclass clazz) {
     return (jlong) assLibrary;
 }
 
+void nativeAssAddFont(JNIEnv* env, jclass clazz, jlong ass, jstring name, jbyteArray byteArray) {
+    jsize length = (*env)->GetArrayLength(env, byteArray);
+
+    jbyte* bytePtr = (*env)->GetByteArrayElements(env, byteArray, NULL);
+
+    if (bytePtr == NULL) {
+        return;
+    }
+    const char * cName = (*env)->GetStringUTFChars(env, name, NULL);
+    ass_add_font(((ASS_Library *) ass), cName, bytePtr, length);
+    (*env)->ReleaseByteArrayElements(env, byteArray, bytePtr, 0);
+}
+
+void nativeAssClearFont(JNIEnv* env, jclass clazz, jlong ass) {
+    ass_clear_fonts((ASS_Library *) ass);
+}
+
 void nativeAssDeinit(JNIEnv* env, jclass clazz, jlong ass) {
     if (ass) {
         ass_library_done((ASS_Library *) ass);
@@ -29,6 +46,8 @@ void nativeAssDeinit(JNIEnv* env, jclass clazz, jlong ass) {
 
 static JNINativeMethod method_table[] = {
         {"nativeAssInit", "()J", (void*)nativeAssInit},
+        {"nativeAssAddFont", "(JLjava/lang/String;[B)V", (void*) nativeAssAddFont},
+        {"nativeAssClearFont", "(J)V", (void*) nativeAssClearFont},
         {"nativeAssDeinit", "(J)V", (void*)nativeAssDeinit}
 };
 
