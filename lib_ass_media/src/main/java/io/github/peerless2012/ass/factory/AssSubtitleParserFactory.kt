@@ -37,4 +37,8 @@ class AssSubtitleParserFactory(private val assKeeper: AssKeeper): SubtitleParser
         }
     }
 
+    fun addFont(name: String, data: ByteArray) {
+        println("Added font $name")
+        assKeeper.ass.addFont(name, data)
+    }
 }
