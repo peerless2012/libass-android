@@ -5,11 +5,13 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.ExtractorInput
 import androidx.media3.extractor.mkv.EbmlProcessor
 import androidx.media3.extractor.mkv.MatroskaExtractor
+import io.github.peerless2012.ass.AssKeeper
 import io.github.peerless2012.ass.factory.AssSubtitleParserFactory
 
 @OptIn(UnstableApi::class)
 class AssMatroskaExtractor(
-    private val subtitleParserFactory: AssSubtitleParserFactory
+    subtitleParserFactory: AssSubtitleParserFactory,
+    private val assKeeper: AssKeeper
 ) : MatroskaExtractor(subtitleParserFactory) {
 
     private var currentAttachmentName: String? = null
@@ -60,7 +62,7 @@ class AssMatroskaExtractor(
                 if (attachmentMime in fontMimeTypes) {
                     val data = ByteArray(contentSize)
                     input.readFully(data, 0, contentSize)
-                    subtitleParserFactory.addFont(attachmentName, data)
+                    assKeeper.ass.addFont(attachmentName, data)
                 } else {
                     input.skipFully(contentSize)
                 }
