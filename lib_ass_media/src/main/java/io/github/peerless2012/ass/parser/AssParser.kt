@@ -9,8 +9,6 @@ import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.SubtitleParser
 import io.github.peerless2012.ass.AssKeeper
 
-
-
 /**
  * @Author peerless2012
  * @Email peerless2012@126.com
@@ -27,10 +25,21 @@ class AssParser: SubtitleParser {
 
     private val assKeeper: AssKeeper
 
+    private var videoSizeDirty = true
+
+    private var surfaceSizeDirty = true
+
     constructor(assKeeper: AssKeeper): this(assKeeper, null)
 
     constructor(assKeeper: AssKeeper, initializationData: List<ByteArray>?) {
         this.assKeeper = assKeeper
+        this.updateRenderSize()
+        this.assKeeper.onVideoSizeChanged {
+            videoSizeDirty = true
+        }
+        this.assKeeper.onSurfaceSizeChanged {
+            surfaceSizeDirty = true
+        }
         if (!initializationData.isNullOrEmpty()) {
             haveInitializationData = true
             val format = String(initializationData[0], Charsets.UTF_8)
@@ -50,6 +59,28 @@ class AssParser: SubtitleParser {
         }
     }
 
+    /**
+     * Update storage and frame size
+     */
+    private fun updateRenderSize() {
+        if (videoSizeDirty) {
+            val videoSize = this.assKeeper.videoSize
+            if (videoSize.width > 0 && videoSize.height > 0) {
+                Log.i("AssParser", "video size = $videoSize")
+                assKeeper.render.setStorageSize(videoSize.width, videoSize.height)
+            }
+            videoSizeDirty = false
+        }
+        if (surfaceSizeDirty) {
+            val surfaceSize = assKeeper.surfaceSize
+            if (surfaceSize.width > 0 && surfaceSize.height > 0) {
+                Log.i("AssParser", "surface size = $surfaceSize")
+                assKeeper.render.setFrameSize(surfaceSize.width, surfaceSize.height)
+            }
+            surfaceSizeDirty = false
+        }
+    }
+
     override fun parse(
         data: ByteArray,
         offset: Int,
@@ -57,6 +88,7 @@ class AssParser: SubtitleParser {
         outputOptions: SubtitleParser.OutputOptions,
         output: Consumer<CuesWithTiming>
     ) {
+        updateRenderSize()
         // Note
         // Exoplayer will trans time from hh:mm:ss.xxx to hh:mm:ss:xxx
         // And lib ass only can parse hh:mm:ss.xxx
@@ -70,21 +102,20 @@ class AssParser: SubtitleParser {
         assKeeper.track.readBuffer(newText.toByteArray())
         val events = assKeeper.track.getEvents()
         val cues= mutableListOf<Cue>()
-        val startTimesUs: List<Long> = ArrayList()
-        Log.i("AssParser", string)
+        Log.i("AssParser", "subtitle = $string")
         events?.forEach {event ->
-            Log.i("AssParser", "event : " + event)
+//            Log.i("AssParser", "event : " + event)
             val texs = assKeeper.render.readFrames(event.start)
             texs?.forEach { tex ->
-                Log.i("AssParser", "tex : x = " + tex.x + ", y = " + tex.y + ", width = " + tex.bitmap.width + ", height = " + tex.bitmap.height)
+//                Log.i("AssParser", "tex : x = " + tex.x + ", y = " + tex.y + ", width = " + tex.bitmap.width + ", height = " + tex.bitmap.height)
                 val cue = Cue.Builder()
                     .setBitmap(tex.bitmap)
-                    .setPosition(tex.x / assKeeper.width.toFloat())
+                    .setPosition(tex.x / assKeeper.surfaceSize.width.toFloat())
                     .setPositionAnchor(Cue.ANCHOR_TYPE_START)
-                    .setLine(tex.y / assKeeper.height.toFloat(), Cue.LINE_TYPE_FRACTION)
+                    .setLine(tex.y / assKeeper.surfaceSize.height.toFloat(), Cue.LINE_TYPE_FRACTION)
                     .setLineAnchor(Cue.ANCHOR_TYPE_START)
-                    .setSize(tex.bitmap.width / assKeeper.width.toFloat())
-                    .setBitmapHeight(tex.bitmap.height / assKeeper.height.toFloat())
+                    .setSize(tex.bitmap.width / assKeeper.surfaceSize.width.toFloat())
+                    .setBitmapHeight(tex.bitmap.height / assKeeper.surfaceSize.height.toFloat())
                     .build()
                 cues.add(cue)
             }

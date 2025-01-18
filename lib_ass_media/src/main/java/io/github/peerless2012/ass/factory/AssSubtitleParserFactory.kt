@@ -29,7 +29,6 @@ class AssSubtitleParserFactory(private val assKeeper: AssKeeper): SubtitleParser
     }
 
     override fun create(format: Format): SubtitleParser {
-//        return defaultSubtitleParserFactory.create(format)
         return if (format.sampleMimeType == MimeTypes.TEXT_SSA) {
             AssParser(assKeeper, format.initializationData)
         } else {

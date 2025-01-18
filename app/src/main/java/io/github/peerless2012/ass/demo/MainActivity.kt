@@ -72,6 +72,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        player.release()
         super.onDestroy()
     }
 
