@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         val mediaFactory = DefaultMediaSourceFactory(
             OkHttpDataSource.Factory(okHttpClient),
             DefaultExtractorsFactory().withAssMkvSupport(assSubtitleParserFactory, assKeeper)
-        ).setSubtitleParserFactory(assSubtitleParserFactory)
+        )
 
         player = ExoPlayer.Builder(this)
             .setMediaSourceFactory(mediaFactory)
