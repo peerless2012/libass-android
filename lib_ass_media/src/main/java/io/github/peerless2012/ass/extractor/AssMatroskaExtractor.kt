@@ -32,11 +32,15 @@ class AssMatroskaExtractor(
 
     override fun startMasterElement(id: Int, contentPosition: Long, contentSize: Long) {
         when (id) {
-            ID_ATTACHED_FILE -> {
-                currentAttachmentName = null
-                currentAttachmentMime = null
-            }
+            ID_ATTACHED_FILE -> clearAttachment()
             else -> super.startMasterElement(id, contentPosition, contentSize)
+        }
+    }
+
+    override fun endMasterElement(id: Int) {
+        when (id) {
+            ID_ATTACHED_FILE -> clearAttachment()
+            else -> super.endMasterElement(id)
         }
     }
 
@@ -63,6 +67,11 @@ class AssMatroskaExtractor(
             }
             else -> super.binaryElement(id, contentSize, input)
         }
+    }
+
+    private fun clearAttachment() {
+        currentAttachmentName = null
+        currentAttachmentMime = null
     }
 
     companion object {
