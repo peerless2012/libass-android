@@ -13,12 +13,10 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.DefaultExtractorsFactory
-import androidx.media3.extractor.ExtractorsFactory
-import androidx.media3.extractor.mkv.MatroskaExtractor
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import io.github.peerless2012.ass.AssKeeper
-import io.github.peerless2012.ass.extractor.AssMatroskaExtractor
+import io.github.peerless2012.ass.extractor.withAssMkvSupport
 import io.github.peerless2012.ass.factory.AssRenderFactory
 import io.github.peerless2012.ass.factory.AssSubtitleParserFactory
 import okhttp3.OkHttpClient
@@ -55,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         val assSubtitleParserFactory = AssSubtitleParserFactory(assKeeper)
         val mediaFactory = DefaultMediaSourceFactory(
             OkHttpDataSource.Factory(okHttpClient),
-            ExtendedExtractorsFactory(assSubtitleParserFactory)
+            DefaultExtractorsFactory().withAssMkvSupport(assSubtitleParserFactory)
         ).setSubtitleParserFactory(assSubtitleParserFactory)
 
         player = ExoPlayer.Builder(this)
@@ -77,15 +75,4 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-}
-
-@OptIn(UnstableApi::class)
-class ExtendedExtractorsFactory(
-    private val assSubtitleParserFactory: AssSubtitleParserFactory
-) : ExtractorsFactory {
-    override fun createExtractors() =
-        DefaultExtractorsFactory().createExtractors()
-            .filter { it !is MatroskaExtractor }
-            .plus(AssMatroskaExtractor(assSubtitleParserFactory))
-            .toTypedArray()
 }
