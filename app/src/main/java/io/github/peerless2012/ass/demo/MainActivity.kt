@@ -1,31 +1,30 @@
 package io.github.peerless2012.ass.demo
 
 import android.os.Bundle
-import android.widget.Button
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.EditText
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
+import com.google.android.material.appbar.MaterialToolbar
 import io.github.peerless2012.ass.AssKeeper
 import io.github.peerless2012.ass.extractor.withAssMkvSupport
-import io.github.peerless2012.ass.factory.AssRenderFactory
 import io.github.peerless2012.ass.factory.AssSubtitleParserFactory
-import okhttp3.OkHttpClient
-
 
 class MainActivity : AppCompatActivity() {
 
-//    private val url = "http://192.168.0.254:8096/Videos/f5eff7c7-53de-684c-36cd-f4c7cefc99e3/stream?static=true&mediaSourceId=f5eff7c753de684c36cdf4c7cefc99e3&streamOptions=%7B%7D"
-    private val url = "http://192.168.0.26:8080/files/c.mkv"
+    private var url = "http://192.168.0.26:8080/files/c.mkv"
 
     private lateinit var player:ExoPlayer
 
@@ -41,24 +40,19 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        findViewById<Button>(R.id.main_track).setOnClickListener {
-            selectTrack()
-        }
-        val okHttpClient = OkHttpClient.Builder()
-            .build()
+        val toolbar = findViewById<MaterialToolbar>(R.id.main_toolbar)
+        setSupportActionBar(toolbar)
+
 
         playerView = findViewById(R.id.main_player)
 
         val assKeeper = AssKeeper()
         val assSubtitleParserFactory = AssSubtitleParserFactory(assKeeper)
-        val mediaFactory = DefaultMediaSourceFactory(
-            OkHttpDataSource.Factory(okHttpClient),
-            DefaultExtractorsFactory().withAssMkvSupport(assSubtitleParserFactory, assKeeper)
-        )
+        val extractorsFactory = DefaultExtractorsFactory().withAssMkvSupport(assSubtitleParserFactory, assKeeper)
+        val mediaFactory = DefaultMediaSourceFactory(applicationContext, extractorsFactory)
 
         player = ExoPlayer.Builder(this)
             .setMediaSourceFactory(mediaFactory)
-            .setRenderersFactory(AssRenderFactory(baseContext, assKeeper))
             .build()
         player.addListener(assKeeper)
         playerView.player = player
@@ -66,9 +60,44 @@ class MainActivity : AppCompatActivity() {
         player.prepare()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId) {
+            R.id.menu_url-> switchUrl()
+            R.id.menu_audio -> selectTrack(androidx.media3.common.C.TRACK_TYPE_AUDIO)
+            R.id.menu_sub -> selectTrack(androidx.media3.common.C.TRACK_TYPE_TEXT)
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun switchUrl() {
+        val urlInput = EditText(this).also {
+            it.setText(url)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Set url")
+            .setPositiveButton("Confirm"
+            ) { dialog, which ->
+                url = urlInput.text.toString()
+                player.stop()
+                player.setMediaItem(MediaItem.fromUri(url))
+                player.prepare()
+            }
+            .setNegativeButton("Cancel", null)
+            .setView(urlInput)
+            .create()
+            .show()
+    }
+
     @OptIn(UnstableApi::class)
-    private fun selectTrack() {
-        TrackSelectionDialogBuilder(this, "aa", player, androidx.media3.common.C.TRACK_TYPE_TEXT).build().show()
+    private fun selectTrack(trackType: Int) {
+        TrackSelectionDialogBuilder(this, "Select track", player, trackType)
+            .build()
+            .show()
     }
 
     override fun onDestroy() {

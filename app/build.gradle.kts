@@ -14,6 +14,10 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            // TO FIX, only arm64 support current now.
+            abiFilters.add("arm64-v8a")
+        }
     }
 
     buildFeatures {
@@ -54,7 +58,6 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(project(":lib_ass_media"))
     implementation(libs.androidx.media3.exo)
-    implementation(libs.androidx.media3.okhttp)
     implementation(libs.androidx.media3.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

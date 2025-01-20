@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "io.github.peerless2012.ass.kt"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 21
@@ -15,6 +15,10 @@ android {
             cmake {
                 arguments += listOf("-DANDROID_STL=c++_shared")
             }
+        }
+        ndk {
+            // TO FIX, only arm64 support current now.
+            abiFilters.add("arm64-v8a")
         }
     }
     buildFeatures {

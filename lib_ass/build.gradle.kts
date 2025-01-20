@@ -16,6 +16,10 @@ android {
                 arguments += listOf("-DANDROID_STL=c++_shared")
             }
         }
+        ndk {
+            // TO FIX, only arm64 support current now.
+            abiFilters.add("arm64-v8a")
+        }
     }
     buildFeatures {
         prefabPublishing = true

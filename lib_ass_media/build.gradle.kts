@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "io.github.peerless2012.exo"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 21
