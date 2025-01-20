@@ -7,6 +7,7 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.text.TextRenderer
+import io.github.peerless2012.ass.AssKeeper
 import java.util.ArrayList
 
 /**
@@ -17,7 +18,7 @@ import java.util.ArrayList
  * @Description
  */
 @UnstableApi
-class AssRenderFactory(context: Context) : DefaultRenderersFactory(context) {
+class AssRenderFactory(context: Context, private val assKeeper: AssKeeper) : DefaultRenderersFactory(context) {
 
     override fun buildTextRenderers(
         context: Context,
@@ -27,7 +28,7 @@ class AssRenderFactory(context: Context) : DefaultRenderersFactory(context) {
         out: ArrayList<Renderer>
     ) {
         super.buildTextRenderers(context, output, outputLooper, extensionRendererMode, out)
-        out.add(0, TextRenderer(output, outputLooper, AssDecoderFactory()))
+        out.add(0, TextRenderer(output, outputLooper, AssDecoderFactory(assKeeper)))
     }
 
 }

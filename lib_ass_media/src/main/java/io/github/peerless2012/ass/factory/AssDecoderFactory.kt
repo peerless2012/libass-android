@@ -5,6 +5,7 @@ import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
 import androidx.media3.exoplayer.text.SubtitleDecoderFactory
 import androidx.media3.extractor.text.SubtitleDecoder
+import io.github.peerless2012.ass.AssKeeper
 import io.github.peerless2012.ass.decoder.AssSubtitleDecoder
 
 /**
@@ -15,14 +16,14 @@ import io.github.peerless2012.ass.decoder.AssSubtitleDecoder
  * @Description
  */
 @SuppressLint("UnsafeOptInUsageError")
-class AssDecoderFactory : SubtitleDecoderFactory {
+class AssDecoderFactory(private val assKeeper: AssKeeper) : SubtitleDecoderFactory {
 
     override fun supportsFormat(format: Format): Boolean {
         return format.sampleMimeType == MimeTypes.TEXT_SSA
     }
 
     override fun createDecoder(format: Format): SubtitleDecoder {
-        return AssSubtitleDecoder()
+        return AssSubtitleDecoder(assKeeper, format.initializationData)
     }
 
 }

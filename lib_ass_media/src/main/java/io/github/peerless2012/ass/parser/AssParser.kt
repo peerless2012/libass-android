@@ -93,18 +93,20 @@ class AssParser: SubtitleParser {
         // Exoplayer will trans time from hh:mm:ss.xxx to hh:mm:ss:xxx
         // And lib ass only can parse hh:mm:ss.xxx
         // So we have to replace the time
+        Log.i("AssParser", "-------------------------------------------------------------------------------")
         val string = String(data, offset, length, Charsets.UTF_8)
         val newText = timestampPattern.replace(string) { matchResult ->
             val timePart = matchResult.groupValues[1]
             val frames = matchResult.groupValues[2]
             "$timePart.$frames"
         }
+        Log.i("AssParser", "read data: $string")
         assKeeper.track.readBuffer(newText.toByteArray())
         val events = assKeeper.track.getEvents()
         val cues= mutableListOf<Cue>()
-        Log.i("AssParser", "subtitle = $string")
+        Log.i("AssParser", "iterator event = ${events?.size}")
         events?.forEach {event ->
-//            Log.i("AssParser", "event : " + event)
+            Log.i("AssParser", "event: $event")
             val texs = assKeeper.render.readFrames(event.start)
             texs?.forEach { tex ->
 //                Log.i("AssParser", "tex : x = " + tex.x + ", y = " + tex.y + ", width = " + tex.bitmap.width + ", height = " + tex.bitmap.height)
@@ -125,6 +127,7 @@ class AssParser: SubtitleParser {
             }
         }
         assKeeper.track.clearEvent()
+        Log.i("AssParser", "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
     }
 
     override fun getCueReplacementBehavior(): Int {

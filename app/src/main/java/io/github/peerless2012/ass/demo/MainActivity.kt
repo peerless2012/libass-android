@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
 
         player = ExoPlayer.Builder(this)
             .setMediaSourceFactory(mediaFactory)
-            .setRenderersFactory(AssRenderFactory(baseContext))
+            .setRenderersFactory(AssRenderFactory(baseContext, assKeeper))
             .build()
         player.addListener(assKeeper)
         playerView.player = player

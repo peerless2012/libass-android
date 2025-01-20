@@ -3,7 +3,8 @@ package io.github.peerless2012.ass.decoder
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.text.SimpleSubtitleDecoder
 import androidx.media3.extractor.text.Subtitle
-import io.github.peerless2012.ass.text.AssSubtitle
+import io.github.peerless2012.ass.AssKeeper
+import io.github.peerless2012.ass.parser.AssParser
 
 /**
  * @Author peerless2012
@@ -13,10 +14,15 @@ import io.github.peerless2012.ass.text.AssSubtitle
  * @Description
  */
 @UnstableApi
-class AssSubtitleDecoder: SimpleSubtitleDecoder("ASS") {
+class AssSubtitleDecoder(assKeeper: AssKeeper, initData: List<ByteArray>): SimpleSubtitleDecoder("AssSubtitleDecoder") {
+
+    private val assParser = AssParser(assKeeper, initData)
 
     override fun decode(data: ByteArray, length: Int, reset: Boolean): Subtitle {
-        return AssSubtitle()
+        if (reset) {
+            assParser.reset()
+        }
+        return assParser.parseToLegacySubtitle(data, 0, length)
     }
 
 }
