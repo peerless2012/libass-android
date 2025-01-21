@@ -10,3 +10,5 @@ import android.graphics.Bitmap
  * @Description
  */
 data class ASSTex(val x: Int, val y: Int, val bitmap: Bitmap)
+
+data class ASSTexAlpha(val x: Int, val y: Int, val alpha: Bitmap, val color: Int)

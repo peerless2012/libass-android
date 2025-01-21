@@ -7,12 +7,18 @@ package io.github.peerless2012.ass.kt
  * @Version V1.0
  * @Description
  */
-class Ass {
+class Ass private constructor() {
 
     companion object {
+        var isInitialized = false
+            private set
 
-        init {
-            System.loadLibrary("asskt")
+        fun newInstance(): Ass {
+            if (!isInitialized) {
+                System.loadLibrary("asskt")
+                isInitialized = true
+            }
+            return Ass()
         }
 
         @JvmStatic

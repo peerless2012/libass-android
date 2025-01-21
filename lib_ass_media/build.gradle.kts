@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.media3.exo)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.effect)
     implementation(project(":lib_ass_kt"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
