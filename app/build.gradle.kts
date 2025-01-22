@@ -14,10 +14,6 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        ndk {
-            // TO FIX, only arm64 support current now.
-            abiFilters.add("arm64-v8a")
-        }
     }
 
     buildFeatures {
