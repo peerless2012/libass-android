@@ -33,5 +33,5 @@ add_dependencies(${CMAKE_PROJECT_NAME} ep_ass)
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/include)
 target_link_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/lib)
 target_link_libraries(${CMAKE_PROJECT_NAME}
-        "-Wl,--whole-archive" libass.a fribidi freetyped harfbuzz unibreak png "-Wl,--no-whole-archive"
+        "-Wl,--whole-archive" libass.a fribidi freetype harfbuzz unibreak png "-Wl,--no-whole-archive"
         z)
