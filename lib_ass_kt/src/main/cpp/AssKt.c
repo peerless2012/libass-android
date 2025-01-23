@@ -194,8 +194,11 @@ jobject createBitmap(JNIEnv* env, const ASS_Image* image) {
         for (int x = 0; x < image->w; ++x) {
             unsigned alpha = image->bitmap[y * stride + x];
             if (alpha > 0) {
+                unsigned int a = (opacity * alpha) / 255;
+                // premultiplied alpha
+                float pm = a / 255.0f;
                 // ABGR
-                line[x] = ((opacity * alpha) / 255) << 24 | (b << 16) | (g << 8) | r;
+                line[x] = a << 24 | ((unsigned int) (b * pm) << 16) | ((unsigned int) (g * pm) << 8) | (unsigned int) (r * pm);
             } else {
                 line[x] = 0;
             }
