@@ -175,6 +175,13 @@ class AssHandler(val useEffectsRenderer: Boolean) : Listener {
     }
 
     /**
+     * Reads a [dialogue] into the track of the given [trackId].
+     */
+    fun readTrackDialogue(dialogue: String, trackId: String?) {
+        availableTracks[trackId]?.readBuffer(dialogue)
+    }
+
+    /**
      * Retrieves the ID of the selected ASS track, if any.
      * @param tracks The selected tracks.
      * @return The ID of the selected ASS track, or null if none.
