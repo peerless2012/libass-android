@@ -28,7 +28,7 @@ class AssHandler(val useEffectsRenderer: Boolean) : Listener {
 
     /** The ASS instance used for creating tracks and renderers. This is lazy to avoid loading
      * libass if the played media does not have ASS tracks. */
-    val ass by lazy { Ass.newInstance() }
+    val ass by lazy { Ass() }
 
     /** The current ASS renderer. It's created as soon as a ASS track is detected. */
     var render: ASSRender? = null
@@ -133,6 +133,13 @@ class AssHandler(val useEffectsRenderer: Boolean) : Listener {
      */
     fun setVideoSize(width: Int, height: Int) {
         videoSize = Size(width, height)
+    }
+
+    /**
+     * Returns true if the current media has ASS tracks, false otherwise.
+     */
+    fun hasTracks(): Boolean {
+        return availableTracks.isNotEmpty()
     }
 
     /**

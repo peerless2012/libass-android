@@ -82,7 +82,7 @@ class AssMatroskaExtractor(
                 val attachmentMime = requireNotNull(currentAttachmentMime)
 
                 // Only add fonts if an ASS track was detected to support lazy initialization
-                if (Ass.isInitialized && attachmentMime in fontMimeTypes) {
+                if (assHandler.hasTracks() && attachmentMime in fontMimeTypes) {
                     val data = ByteArray(contentSize)
                     input.readFully(data, 0, contentSize)
                     assHandler.ass.addFont(attachmentName, data)
