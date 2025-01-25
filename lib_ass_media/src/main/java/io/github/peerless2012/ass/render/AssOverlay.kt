@@ -36,7 +36,7 @@ class AssOverlay(private val renderer: ASSRender) : CanvasOverlay(true) {
             val color = (a shl 24) or (r shl 16) or (g shl 8) or b
 
             paint.color = color
-            canvas.drawBitmap(frame.alpha, frame.x.toFloat(), frame.y.toFloat(), paint)
+            canvas.drawBitmap(frame.bitmap, frame.x.toFloat(), frame.y.toFloat(), paint)
         }
     }
 }
