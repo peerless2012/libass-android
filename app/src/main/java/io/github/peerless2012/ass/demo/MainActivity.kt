@@ -12,15 +12,13 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
-import io.github.peerless2012.ass.AssKeeper
-import io.github.peerless2012.ass.extractor.withAssMkvSupport
-import io.github.peerless2012.ass.factory.AssSubtitleParserFactory
+import io.github.peerless2012.ass.buildWithAssSupport
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,17 +42,13 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
 
-        playerView = findViewById(R.id.main_player)
-
-        val assKeeper = AssKeeper()
-        val assSubtitleParserFactory = AssSubtitleParserFactory(assKeeper)
-        val extractorsFactory = DefaultExtractorsFactory().withAssMkvSupport(assSubtitleParserFactory, assKeeper)
-        val mediaFactory = DefaultMediaSourceFactory(applicationContext, extractorsFactory)
-
         player = ExoPlayer.Builder(this)
-            .setMediaSourceFactory(mediaFactory)
-            .build()
-        player.addListener(assKeeper)
+            .buildWithAssSupport(
+                dataSourceFactory = DefaultDataSource.Factory(this),
+                extractorsFactory = DefaultExtractorsFactory(),
+                useEffectsRenderer = true
+            )
+        playerView = findViewById(R.id.main_player)
         playerView.player = player
         player.setMediaItem(MediaItem.fromUri(url))
         player.prepare()
@@ -96,6 +90,7 @@ class MainActivity : AppCompatActivity() {
     @OptIn(UnstableApi::class)
     private fun selectTrack(trackType: Int) {
         TrackSelectionDialogBuilder(this, "Select track", player, trackType)
+            .setShowDisableOption(true)
             .build()
             .show()
     }

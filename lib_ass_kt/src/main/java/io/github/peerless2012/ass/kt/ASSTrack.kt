@@ -35,6 +35,8 @@ class ASSTrack(private val ass: Long) {
 
     public val nativeAssTrack = nativeAssTrackInit(ass)
 
+    private val hashCache = mutableSetOf<Int>()
+
     public fun getWidth(): Int {
         return nativeAssTrackGetWidth(nativeAssTrack)
     }
@@ -48,7 +50,17 @@ class ASSTrack(private val ass: Long) {
     }
 
     public fun clearEvent() {
+        hashCache.clear()
         nativeAssTrackClearEvents(nativeAssTrack)
+    }
+
+    public fun readBuffer(line: String) {
+        val hash = line.hashCode()
+        if (hash in hashCache) return
+
+        hashCache.add(hash)
+        val array = line.encodeToByteArray()
+        nativeAssTrackReadBuffer(nativeAssTrack, array, 0, array.size)
     }
 
     public fun readBuffer(array: ByteArray, offset: Int = 0, length : Int = array.size) {

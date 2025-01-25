@@ -1,8 +1,5 @@
 package io.github.peerless2012.ass.kt
 
-import android.graphics.Bitmap
-import java.nio.ByteBuffer
-
 /**
  * @Author peerless2012
  * @Email peerless2012@126.com
@@ -27,7 +24,7 @@ class ASSRender(nativeAss: Long) {
         external fun nativeAssRenderSetFrameSize(render: Long, width: Int, height: Int)
 
         @JvmStatic
-        external fun nativeAssRenderReadFrames(render: Long, track: Long, time: Long): Array<ASSTex>?
+        external fun nativeAssRenderFrame(render: Long, track: Long, time: Long, onlyAlpha: Boolean): ASSFrame?
 
         @JvmStatic
         external fun nativeAssRenderDeinit(render: Long)
@@ -37,7 +34,7 @@ class ASSRender(nativeAss: Long) {
 
     private var track: ASSTrack? = null
 
-    public fun setTrack(track: ASSTrack) {
+    public fun setTrack(track: ASSTrack?) {
         this.track = track
     }
 
@@ -53,8 +50,8 @@ class ASSRender(nativeAss: Long) {
         nativeAssRenderSetFrameSize(nativeRender, width, height)
     }
 
-    public fun readFrames(time: Long): Array<ASSTex>? {
-        return nativeAssRenderReadFrames(nativeRender, track!!.nativeAssTrack, time)
+    public fun renderFrame(time: Long, onlyAlpha: Boolean): ASSFrame? {
+        return track?.let { nativeAssRenderFrame(nativeRender, it.nativeAssTrack, time, onlyAlpha) }
     }
 
     protected fun finalize() {

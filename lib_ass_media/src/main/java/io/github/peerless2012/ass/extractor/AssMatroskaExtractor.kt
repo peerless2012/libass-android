@@ -3,15 +3,18 @@ package io.github.peerless2012.ass.extractor
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.ExtractorInput
+import androidx.media3.extractor.ExtractorOutput
 import androidx.media3.extractor.mkv.EbmlProcessor
 import androidx.media3.extractor.mkv.MatroskaExtractor
-import io.github.peerless2012.ass.AssKeeper
-import io.github.peerless2012.ass.factory.AssSubtitleParserFactory
+import androidx.media3.extractor.text.SubtitleParser
+import io.github.peerless2012.ass.AssHandler
+import io.github.peerless2012.ass.kt.Ass
+import io.github.peerless2012.ass.text.AssSubtitleExtractorOutput
 
 @OptIn(UnstableApi::class)
 class AssMatroskaExtractor(
-    subtitleParserFactory: AssSubtitleParserFactory,
-    private val assKeeper: AssKeeper
+    subtitleParserFactory: SubtitleParser.Factory,
+    private val assHandler: AssHandler
 ) : MatroskaExtractor(subtitleParserFactory) {
 
     private var currentAttachmentName: String? = null
@@ -34,6 +37,18 @@ class AssMatroskaExtractor(
 
     override fun startMasterElement(id: Int, contentPosition: Long, contentSize: Long) {
         when (id) {
+            ID_EBML -> {
+                if (assHandler.useEffectsRenderer) {
+                    val currentExtractor = extractorOutput.get(this) as ExtractorOutput
+                    if (currentExtractor !is AssSubtitleExtractorOutput) {
+                        extractorOutput.set(
+                            this,
+                            AssSubtitleExtractorOutput(currentExtractor, assHandler)
+                        )
+                    }
+                }
+                super.startMasterElement(id, contentPosition, contentSize)
+            }
             ID_ATTACHED_FILE -> clearAttachment()
             else -> super.startMasterElement(id, contentPosition, contentSize)
         }
@@ -41,6 +56,12 @@ class AssMatroskaExtractor(
 
     override fun endMasterElement(id: Int) {
         when (id) {
+            ID_VIDEO -> {
+                // We need to get the video dimensions very early
+                val track = getCurrentTrack(id)
+                assHandler.setVideoSize(track.width, track.height)
+                super.endMasterElement(id)
+            }
             ID_ATTACHED_FILE -> clearAttachment()
             else -> super.endMasterElement(id)
         }
@@ -59,10 +80,12 @@ class AssMatroskaExtractor(
             ID_FILE_DATA -> {
                 val attachmentName = requireNotNull(currentAttachmentName)
                 val attachmentMime = requireNotNull(currentAttachmentMime)
-                if (attachmentMime in fontMimeTypes) {
+
+                // Only add fonts if an ASS track was detected to support lazy initialization
+                if (assHandler.hasTracks() && attachmentMime in fontMimeTypes) {
                     val data = ByteArray(contentSize)
                     input.readFully(data, 0, contentSize)
-                    assKeeper.ass.addFont(attachmentName, data)
+                    assHandler.ass.addFont(attachmentName, data)
                 } else {
                     input.skipFully(contentSize)
                 }
@@ -77,6 +100,8 @@ class AssMatroskaExtractor(
     }
 
     companion object {
+        const val ID_EBML = 0x1A45DFA3
+        const val ID_VIDEO = 0xE0
         const val ID_ATTACHMENTS = 0x1941A469
         const val ID_ATTACHED_FILE = 0x61A7
         const val ID_FILE_NAME = 0x466E
@@ -95,5 +120,9 @@ class AssMatroskaExtractor(
             "application/vnd.ms-opentype",
             "application/x-font-ttf",
         )
+
+        val extractorOutput = MatroskaExtractor::class.java.getDeclaredField("extractorOutput").apply {
+            isAccessible = true
+        }
     }
 }
