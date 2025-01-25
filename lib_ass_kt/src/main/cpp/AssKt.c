@@ -228,11 +228,14 @@ jobject createAlphaBitmap(JNIEnv* env, const ASS_Image* image) {
         return NULL;
     }
 
-    int stride = image->stride;
-    for (int y = 0; y < image->h; ++y) {
-        char *dst = (char *) bitmapPixels + y * info.stride;
-        char *src = (char *) image->bitmap + y * stride;
-        memcpy(dst, src, image->w);
+    if (info.stride == image->stride) {
+        memcpy(bitmapPixels, image->bitmap, info.stride * info.height);
+    } else {
+        for (int y = 0; y < image->h; ++y) {
+            char *dst = (char *) bitmapPixels + y * info.stride;
+            char *src = (char *) image->bitmap + y * image->stride;
+            memcpy(dst, src, image->w);
+        }
     }
     AndroidBitmap_unlockPixels(env, bitmap);
 
@@ -247,65 +250,33 @@ static int count_ass_images(ASS_Image *images) {
     return count;
 }
 
-jobject nativeAssRenderReadFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time) {
-    ASS_Image *image = ass_render_frame((ASS_Renderer *) render, (ASS_Track *) track, time, NULL);
-    if (image == NULL) {
-        return NULL;
-    }
-    int size = count_ass_images(image);
-    jclass assTexClass = (*env)->FindClass(env, "io/github/peerless2012/ass/kt/ASSTex");
-
-    jobjectArray assTexArr = (*env)->NewObjectArray(env, size, assTexClass, NULL);
-    if (assTexArr == NULL) {
-        return NULL;
-    }
-
-
-    int index = 0;
-    for (ASS_Image *img = image; img != NULL; img = img->next) {
-        jobject bitmap = createBitmap(env, img);
-
-        jmethodID assTexConstructor = (*env)->GetMethodID(env, assTexClass, "<init>", "(IILandroid/graphics/Bitmap;I)V");
-
-        jobject assTexObject = (*env)->NewObject(env, assTexClass, assTexConstructor, img->dst_x, img->dst_y, bitmap, img->color);
-
-        (*env)->SetObjectArrayElement(env, assTexArr, index, assTexObject);
-        index++;
-    }
-
-
-    return assTexArr;
-}
-
-jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time) {
+jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time, jboolean onlyAlpha) {
     int changed;
     ASS_Image *image = ass_render_frame((ASS_Renderer *) render, (ASS_Track *) track, time, &changed);
     if (image == NULL) {
         return NULL;
     }
-    jclass assResultClass = (*env)->FindClass(env, "io/github/peerless2012/ass/kt/ASSRenderResult");
-    jmethodID assResultConstructor = (*env)->GetMethodID(env, assResultClass, "<init>", "([Lio/github/peerless2012/ass/kt/ASSTex;I)V");
+    jclass assFrameClass = (*env)->FindClass(env, "io/github/peerless2012/ass/kt/ASSFrame");
+    jmethodID assFrameConstructor = (*env)->GetMethodID(env, assFrameClass, "<init>", "([Lio/github/peerless2012/ass/kt/ASSTex;I)V");
 
     if (changed == 0) {
-        jobject res = (*env)->NewObject(env, assResultClass, assResultConstructor, NULL, changed);
+        jobject res = (*env)->NewObject(env, assFrameClass, assFrameConstructor, NULL, changed);
         return res;
     }
 
     int size = count_ass_images(image);
     jclass assTexClass = (*env)->FindClass(env, "io/github/peerless2012/ass/kt/ASSTex");
+    jmethodID assTexConstructor = (*env)->GetMethodID(env, assTexClass, "<init>", "(IILandroid/graphics/Bitmap;I)V");
 
     jobjectArray assTexArr = (*env)->NewObjectArray(env, size, assTexClass, NULL);
     if (assTexArr == NULL) {
         return NULL;
     }
 
-
     int index = 0;
     for (ASS_Image *img = image; img != NULL; img = img->next) {
-        jobject bitmap = createAlphaBitmap(env, img);
+        jobject bitmap = onlyAlpha ? createAlphaBitmap(env, img) : createBitmap(env, img);
         int32_t color = (int32_t) img->color;
-
-        jmethodID assTexConstructor = (*env)->GetMethodID(env, assTexClass, "<init>", "(IILandroid/graphics/Bitmap;I)V");
 
         jobject assTexObject = (*env)->NewObject(env, assTexClass, assTexConstructor, img->dst_x, img->dst_y, bitmap, color);
 
@@ -313,8 +284,7 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
         index++;
     }
 
-    jobject res = (*env)->NewObject(env, assResultClass, assResultConstructor, assTexArr, changed);
-    return res;
+    return (*env)->NewObject(env, assFrameClass, assFrameConstructor, assTexArr, changed);
 }
 
 void nativeAssRenderDeinit(JNIEnv* env, jclass clazz, jlong render) {
@@ -328,8 +298,7 @@ static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderSetFontScale", "(JF)V", (void*)nativeAssRenderSetFontScale},
         {"nativeAssRenderSetStorageSize", "(JII)V", (void*) nativeAssRenderSetStorageSize},
         {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
-        {"nativeAssRenderReadFrames", "(JJJ)[Lio/github/peerless2012/ass/kt/ASSTex;", (void*)nativeAssRenderReadFrame},
-        {"nativeAssRenderFrame", "(JJJ)Lio/github/peerless2012/ass/kt/ASSRenderResult;", (void*) nativeAssRenderFrame},
+        {"nativeAssRenderFrame", "(JJJZ)Lio/github/peerless2012/ass/kt/ASSFrame;", (void*) nativeAssRenderFrame},
         {"nativeAssRenderDeinit", "(J)V", (void*)nativeAssRenderDeinit},
 };
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {

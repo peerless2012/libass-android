@@ -24,7 +24,7 @@ class AssOverlay(private val renderer: ASSRender) : CanvasOverlay(true) {
     }
 
     override fun onDraw(canvas: Canvas, presentationTimeUs: Long) {
-        val result = renderer.renderFrame(presentationTimeUs / 1000)
+        val result = renderer.renderFrame(presentationTimeUs / 1000, true)
         if (result == null || result.changed != 0) {
             canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         }

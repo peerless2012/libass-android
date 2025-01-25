@@ -67,8 +67,8 @@ class AssSubtitleParser(
         val cues = mutableListOf<Cue>()
         events.forEach {event ->
             Log.i("AssParser", "event : $event")
-            val texs = assHandler.render?.readFrames(event.start)
-            texs?.forEach { tex ->
+            val texs = assHandler.render?.renderFrame(event.start, false)
+            texs?.images?.forEach { tex ->
                 Log.i("AssParser", "tex : x = " + tex.x + ", y = " + tex.y + ", width = " + tex.bitmap.width + ", height = " + tex.bitmap.height)
                 val cue = Cue.Builder()
                     .setBitmap(tex.bitmap)
