@@ -24,9 +24,12 @@ class AssTrackOutput(
 
     private var currentLine = ""
 
+    private var trackId: String? = null
+
     override fun format(format: Format) {
         if (format.sampleMimeType == MimeTypes.TEXT_SSA || format.codecs == MimeTypes.TEXT_SSA) {
             isAss = true
+            trackId = format.id
         }
         delegate.format(format)
     }
@@ -69,7 +72,7 @@ class AssTrackOutput(
                 val start = timeUs.toAssTime()
                 val end = (timeUs + endUs).toAssTime()
                 val dialogue = "%s %s,%s,%s".format(lineType, start, end, remainder)
-                assHandler.track?.readBuffer(dialogue)
+                assHandler.readTrackDialogue(dialogue, trackId)
             }
         }
         delegate.sampleMetadata(timeUs, flags, size, offset, cryptoData)
