@@ -18,6 +18,7 @@
 jlong nativeAssInit(JNIEnv* env, jclass clazz) {
     ASS_Library* assLibrary = ass_library_init();
     ass_set_fonts_dir(assLibrary, "/system/fonts");
+    ass_set_extract_fonts(assLibrary, 1);
     return (jlong) assLibrary;
 }
 
