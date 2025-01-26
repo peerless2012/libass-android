@@ -1,6 +1,7 @@
 package io.github.peerless2012.ass.extractor
 
 import androidx.annotation.OptIn
+import androidx.media3.common.util.ParsableByteArray
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.ExtractorInput
 import androidx.media3.extractor.ExtractorOutput
@@ -8,7 +9,6 @@ import androidx.media3.extractor.mkv.EbmlProcessor
 import androidx.media3.extractor.mkv.MatroskaExtractor
 import androidx.media3.extractor.text.SubtitleParser
 import io.github.peerless2012.ass.AssHandler
-import io.github.peerless2012.ass.kt.Ass
 import io.github.peerless2012.ass.text.AssSubtitleExtractorOutput
 
 @OptIn(UnstableApi::class)
@@ -19,6 +19,8 @@ class AssMatroskaExtractor(
 
     private var currentAttachmentName: String? = null
     private var currentAttachmentMime: String? = null
+
+    internal val subtitleSample = subtitleSampleField.get(this) as ParsableByteArray
 
     override fun getElementType(id: Int): Int {
         return when (id) {
@@ -43,7 +45,7 @@ class AssMatroskaExtractor(
                     if (currentExtractor !is AssSubtitleExtractorOutput) {
                         extractorOutput.set(
                             this,
-                            AssSubtitleExtractorOutput(currentExtractor, assHandler)
+                            AssSubtitleExtractorOutput(currentExtractor, assHandler, this)
                         )
                     }
                 }
@@ -122,6 +124,9 @@ class AssMatroskaExtractor(
         )
 
         val extractorOutput = MatroskaExtractor::class.java.getDeclaredField("extractorOutput").apply {
+            isAccessible = true
+        }
+        val subtitleSampleField = MatroskaExtractor::class.java.getDeclaredField("subtitleSample").apply {
             isAccessible = true
         }
     }

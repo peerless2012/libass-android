@@ -153,7 +153,7 @@ class AssHandler(val useEffectsRenderer: Boolean) : Listener {
         createRenderIfNeeded()
 
         val track = ass.createTrack()
-        val header = AssHeaderParser.parse(format)
+        val header = AssHeaderParser.parse(format, useEffectsRenderer)
         track.readBuffer(header)
         availableTracks[format.id!!] = track
         return track
@@ -175,10 +175,17 @@ class AssHandler(val useEffectsRenderer: Boolean) : Listener {
     }
 
     /**
-     * Reads a [dialogue] into the track of the given [trackId].
+     * Reads a dialogue into the track of the given [trackId].
      */
-    fun readTrackDialogue(dialogue: String, trackId: String?) {
-        availableTracks[trackId]?.readBuffer(dialogue)
+    fun readTrackDialogue(
+        trackId: String?,
+        start: Long,
+        duration: Long,
+        data: ByteArray,
+        offset: Int = 0,
+        length: Int = data.size
+    ) {
+        availableTracks[trackId]?.readChunk(start, duration, data, offset, length)
     }
 
     /**

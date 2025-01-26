@@ -30,12 +30,13 @@ class ASSTrack(private val ass: Long) {
         external fun nativeAssTrackReadBuffer(track: Long, byteArray: ByteArray, offset: Int, length: Int)
 
         @JvmStatic
+        external fun nativeAssTrackReadChunk(track: Long, start: Long, duration: Long, byteArray: ByteArray, offset: Int, length: Int)
+
+        @JvmStatic
         external fun nativeAssTrackDeinit(track: Long)
     }
 
     public val nativeAssTrack = nativeAssTrackInit(ass)
-
-    private val hashCache = mutableSetOf<Int>()
 
     public fun getWidth(): Int {
         return nativeAssTrackGetWidth(nativeAssTrack)
@@ -50,21 +51,15 @@ class ASSTrack(private val ass: Long) {
     }
 
     public fun clearEvent() {
-        hashCache.clear()
         nativeAssTrackClearEvents(nativeAssTrack)
-    }
-
-    public fun readBuffer(line: String) {
-        val hash = line.hashCode()
-        if (hash in hashCache) return
-
-        hashCache.add(hash)
-        val array = line.encodeToByteArray()
-        nativeAssTrackReadBuffer(nativeAssTrack, array, 0, array.size)
     }
 
     public fun readBuffer(array: ByteArray, offset: Int = 0, length : Int = array.size) {
         nativeAssTrackReadBuffer(nativeAssTrack, array, offset, length)
+    }
+
+    public fun readChunk(start: Long, duration: Long, array: ByteArray, offset: Int = 0, length: Int = array.size) {
+        nativeAssTrackReadChunk(nativeAssTrack, start, duration, array, offset, length)
     }
 
     protected fun finalize() {

@@ -1,14 +1,13 @@
 package io.github.peerless2012.ass.text
 
 import androidx.media3.common.C
-import androidx.media3.common.DataReader
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
-import androidx.media3.common.util.ParsableByteArray
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.extractor.TrackOutput
 import io.github.peerless2012.ass.AssHandler
+import io.github.peerless2012.ass.extractor.AssMatroskaExtractor
 import java.util.regex.Pattern
 
 /**
@@ -18,11 +17,10 @@ import java.util.regex.Pattern
 class AssTrackOutput(
     private val delegate: TrackOutput,
     private val assHandler: AssHandler,
-) : TrackOutput {
+    private val extractor: AssMatroskaExtractor,
+) : TrackOutput by delegate {
 
     private var isAss = false
-
-    private var currentLine = ""
 
     private var trackId: String? = null
 
@@ -34,28 +32,6 @@ class AssTrackOutput(
         delegate.format(format)
     }
 
-    // This method is untested (I don't know if this is actually used for ASS subtitles)
-    override fun sampleData(
-        input: DataReader,
-        length: Int,
-        allowEndOfInput: Boolean,
-        sampleDataPart: Int
-    ): Int {
-        if (isAss) {
-            val buffer = ByteArray(length)
-            input.read(buffer, 0, length)
-            currentLine = buffer.decodeToString()
-        }
-        return delegate.sampleData(input, length, allowEndOfInput, sampleDataPart)
-    }
-
-    override fun sampleData(data: ParsableByteArray, length: Int, sampleDataPart: Int) {
-        if (isAss) {
-            currentLine = data.data.decodeToString(endIndex = length)
-        }
-        delegate.sampleData(data, length, sampleDataPart)
-    }
-
     override fun sampleMetadata(
         timeUs: Long,
         flags: Int,
@@ -64,16 +40,21 @@ class AssTrackOutput(
         cryptoData: TrackOutput.CryptoData?
     ) {
         if (isAss && timeUs.isValidTs) {
-            val (lineType, content) = currentLine.split(' ', limit = 2)
-            val (_, rawEnd, remainder) = content.split(',', limit = 3)
+            val sample = extractor.subtitleSample
+            val endIndex = findTokenIndex(sample.data, 1)
+            val lineIndex = findTokenIndex(sample.data, 2)
 
-            val endUs = parseTimecodeUs(rawEnd)
-            if (endUs.isValidTs) {
-                val start = timeUs.toAssTime()
-                val end = (timeUs + endUs).toAssTime()
-                val dialogue = "%s %s,%s,%s".format(lineType, start, end, remainder)
-                assHandler.readTrackDialogue(dialogue, trackId)
-            }
+            val rawDuration = sample.data.decodeToString(endIndex, lineIndex - 1)
+            val durationUs = parseTimecodeUs(rawDuration)
+
+            assHandler.readTrackDialogue(
+                trackId = trackId,
+                start = timeUs / 1000,
+                duration = durationUs / 1000,
+                data = sample.data,
+                offset = lineIndex,
+                length = sample.limit() - lineIndex
+            )
         }
         delegate.sampleMetadata(timeUs, flags, size, offset, cryptoData)
     }
@@ -91,13 +72,15 @@ class AssTrackOutput(
         return timestampUs
     }
 
-    private fun Long.toAssTime(): String {
-        val total = this / 10_000
-        val hours = total / (60 * 60 * 100)
-        val minutes = (total / (60 * 100)) % 60
-        val seconds = (total / 100) % 60
-        val centiseconds = total % 100
-        return "%d:%02d:%02d.%02d".format(hours, minutes, seconds, centiseconds)
+    private fun findTokenIndex(array: ByteArray, tokenNumber: Int): Int {
+        if (tokenNumber == 0) return 0
+        var tokensFound = 0
+        array.forEachIndexed { index, byte ->
+            if (byte == COMMA && ++tokensFound == tokenNumber) {
+                return index + 1
+            }
+        }
+        return 0
     }
 
     private val Long.isValidTs
@@ -106,5 +89,7 @@ class AssTrackOutput(
     private companion object {
         val SSA_TIMECODE_PATTERN: Pattern =
             Pattern.compile("""(?:(\d+):)?(\d+):(\d+)[:.](\d+)""")
+
+        const val COMMA = ','.code.toByte()
     }
 }

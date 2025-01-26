@@ -130,6 +130,16 @@ void nativeAssTrackReadBuffer(JNIEnv* env, jclass clazz, jlong track, jbyteArray
     (*env)->ReleaseByteArrayElements(env, buffer, elements, 0);
 }
 
+void nativeAssTrackReadChunk(JNIEnv* env, jclass clazz, jlong track, jlong start, jlong duration, jbyteArray buffer, jint offset, jint length) {
+    jboolean isCopy;
+    jbyte* elements = (*env)->GetByteArrayElements(env, buffer, &isCopy);
+    if (elements == NULL) {
+        return;
+    }
+    ass_process_chunk((ASS_Track *) track, elements + offset, length, start, duration);
+    (*env)->ReleaseByteArrayElements(env, buffer, elements, 0);
+}
+
 void nativeAssTrackDeinit(JNIEnv* env, jclass clazz, jlong track) {
     ass_free_track((ASS_Track *) track);
 }
@@ -142,6 +152,7 @@ static JNINativeMethod trackMethodTable[] = {
         {"nativeAssTrackGetEvents", "(J)[Lio/github/peerless2012/ass/kt/ASSEvent;", (void*) nativeAssTrackGetEvents},
         {"nativeAssTrackClearEvents", "(J)V", (void*) nativeAssTrackClearEvents},
         {"nativeAssTrackReadBuffer", "(J[BII)V", (void*)nativeAssTrackReadBuffer},
+        {"nativeAssTrackReadChunk", "(JJJ[BII)V", (void*)nativeAssTrackReadChunk},
         {"nativeAssTrackDeinit", "(J)V", (void*)nativeAssTrackDeinit}
 };
 
