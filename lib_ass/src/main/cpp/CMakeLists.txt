@@ -32,6 +32,11 @@ add_dependencies(${CMAKE_PROJECT_NAME} ep_ass)
 #set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME "ass")
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/include)
 target_link_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/lib)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(FREE_TYPE_NAME "freetyped")
+else()
+    set(FREE_TYPE_NAME "freetype")
+endif()
 target_link_libraries(${CMAKE_PROJECT_NAME}
-        "-Wl,--whole-archive" libass.a fribidi freetype harfbuzz unibreak png "-Wl,--no-whole-archive"
+        "-Wl,--whole-archive" libass.a fribidi ${FREE_TYPE_NAME} harfbuzz unibreak png "-Wl,--no-whole-archive"
         z)
