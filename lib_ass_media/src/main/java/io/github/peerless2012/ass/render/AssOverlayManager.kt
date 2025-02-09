@@ -8,7 +8,8 @@ import io.github.peerless2012.ass.kt.ASSRender
 
 @OptIn(UnstableApi::class)
 class AssOverlayManager(
-    private val player: ExoPlayer
+    private val player: ExoPlayer,
+    private val tex: Boolean
 ) {
     private var currentRenderer : ASSRender? = null
 
@@ -20,8 +21,12 @@ class AssOverlayManager(
     fun enable(renderer: ASSRender) {
         if (renderer == currentRenderer) return
         this.currentRenderer = renderer
-
-        val effect = OverlayEffect(listOf(AssOverlay(renderer)))
+        val overlay = if (tex) {
+            AssTexOverlay(renderer)
+        } else {
+            AssCanvasOverlay(renderer)
+        }
+        val effect = OverlayEffect(listOf(overlay))
         player.setVideoEffects(listOf(effect))
     }
 

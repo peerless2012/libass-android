@@ -12,7 +12,7 @@ import io.github.peerless2012.ass.kt.ASSRender
 
 
 @OptIn(UnstableApi::class)
-class AssOverlay(private val renderer: ASSRender) : CanvasOverlay(true) {
+class AssCanvasOverlay(private val renderer: ASSRender) : CanvasOverlay(true) {
 
     private val paint = Paint().apply {
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)

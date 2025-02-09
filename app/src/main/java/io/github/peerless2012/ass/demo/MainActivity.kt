@@ -22,7 +22,7 @@ import io.github.peerless2012.ass.buildWithAssSupport
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.26:8080/files/c.mkv"
+    private var url = "http://192.168.0.19:8080/files/c.mkv"
 
     private lateinit var player:ExoPlayer
 

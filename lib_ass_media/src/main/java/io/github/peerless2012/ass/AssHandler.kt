@@ -61,7 +61,7 @@ class AssHandler(val useEffectsRenderer: Boolean) : Listener {
     fun init(player: ExoPlayer) {
         player.addListener(this)
         if (useEffectsRenderer) {
-            overlayManager = AssOverlayManager(player)
+            overlayManager = AssOverlayManager(player, true)
         }
     }
 
