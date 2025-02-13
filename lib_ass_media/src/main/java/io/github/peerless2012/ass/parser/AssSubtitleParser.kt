@@ -21,6 +21,8 @@ class AssSubtitleParser(
 
     private val timestampPattern = "(\\d+:\\d{2}:\\d{2}):(\\d{2})".toRegex()
 
+    private val fadPattern = """\\fad\((\d+),(\d+)\)""".toRegex()
+
     init {
         updateRenderSize()
         assHandler.onSurfaceSizeChanged {
@@ -62,12 +64,24 @@ class AssSubtitleParser(
             "$timePart.$frames"
         }
 
+        // Note
+        // When use fade effect, the default start time will display nothing.
+        // So we find the fade in and out time, pass the content real display time to ass.
+        // And we also change the start time and duration.
+        val fadeMatch = fadPattern.find(newText)
+        var fadeIn = 0
+        var fadeOut = 0
+        fadeMatch?.destructured?.let { (newFadeIn, newFadeOut) ->
+            fadeIn = newFadeIn.trim().toInt()
+            fadeOut = newFadeOut.trim().toInt()
+        }
+
         track.readBuffer(newText.toByteArray())
         val events = track.getEvents().orEmpty()
         val cues = mutableListOf<Cue>()
         events.forEach {event ->
             Log.i("AssParser", "event : $event")
-            val texs = assHandler.render?.renderFrame(event.start, false)
+            val texs = assHandler.render?.renderFrame(event.start + fadeIn, false)
             texs?.images?.forEach { tex ->
                 Log.i("AssParser", "tex : x = " + tex.x + ", y = " + tex.y + ", width = " + tex.bitmap.width + ", height = " + tex.bitmap.height)
                 val cue = Cue.Builder()
@@ -82,7 +96,7 @@ class AssSubtitleParser(
                 cues.add(cue)
             }
             if (cues.size > 0) {
-                val cwt = CuesWithTiming(cues, event.start * 1000, event.duration * 1000)
+                val cwt = CuesWithTiming(cues, event.start * 1000 + fadeIn * 1000, event.duration * 1000 - (fadeIn + fadeOut) * 1000)
                 output.accept(cwt)
             }
         }
