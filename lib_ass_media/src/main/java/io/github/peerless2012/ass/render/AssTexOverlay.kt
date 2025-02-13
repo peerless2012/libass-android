@@ -25,29 +25,29 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
         """.trimIndent()
 
     // alpha
-    private val fragmentShaderCode = """
-            precision mediump float;
-            varying vec2 v_TexCoord;
-            uniform sampler2D u_Texture;
-            uniform vec4 u_Color;
-            void main() {
-                float alpha = texture2D(u_Texture, v_TexCoord).a;
-                gl_FragColor = u_Color * alpha;
-                
-            }
-        """.trimIndent()
-
-    // ARGB
 //    private val fragmentShaderCode = """
 //            precision mediump float;
 //            varying vec2 v_TexCoord;
 //            uniform sampler2D u_Texture;
 //            uniform vec4 u_Color;
 //            void main() {
-//                vec4 pixel = texture2D(u_Texture, v_TexCoord);
-//                gl_FragColor = pixel;
+//                float alpha = texture2D(u_Texture, v_TexCoord).a;
+//                gl_FragColor = u_Color * alpha;
+//
 //            }
 //        """.trimIndent()
+
+    // ARGB
+    private val fragmentShaderCode = """
+            precision mediump float;
+            varying vec2 v_TexCoord;
+            uniform sampler2D u_Texture;
+            uniform vec4 u_Color;
+            void main() {
+                vec4 pixel = texture2D(u_Texture, v_TexCoord);
+                gl_FragColor = pixel;
+            }
+        """.trimIndent()
 
     private val rectangleCoords = floatArrayOf(
         -1f,  1f,  // Top left
@@ -78,7 +78,7 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
     private var texCoordBufferId = 0
 
     override fun getTextureId(presentationTimeUs: Long): Int {
-        val result = renderer.renderFrame(presentationTimeUs / 1000, true)
+        val result = renderer.renderFrame(presentationTimeUs / 1000, false)
 
         // if content not change, just return the tex
         if (result != null && result.changed == 0) {
