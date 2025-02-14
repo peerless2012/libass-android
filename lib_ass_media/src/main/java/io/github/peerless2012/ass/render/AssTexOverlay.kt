@@ -25,27 +25,15 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
         """.trimIndent()
 
     // alpha
-//    private val fragmentShaderCode = """
-//            precision mediump float;
-//            varying vec2 v_TexCoord;
-//            uniform sampler2D u_Texture;
-//            uniform vec4 u_Color;
-//            void main() {
-//                float alpha = texture2D(u_Texture, v_TexCoord).a;
-//                gl_FragColor = u_Color * alpha;
-//
-//            }
-//        """.trimIndent()
-
-    // ARGB
     private val fragmentShaderCode = """
             precision mediump float;
             varying vec2 v_TexCoord;
             uniform sampler2D u_Texture;
             uniform vec4 u_Color;
             void main() {
-                vec4 pixel = texture2D(u_Texture, v_TexCoord);
-                gl_FragColor = pixel;
+                float alpha = texture2D(u_Texture, v_TexCoord).a;
+                gl_FragColor = u_Color * alpha;
+
             }
         """.trimIndent()
 
@@ -62,6 +50,14 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
         0f, 1f,  // Bottom left
         1f, 1f   // Bottom right
     )
+
+    private val preFbo = IntArray(1)
+
+    private val preViewPort = IntArray(4)
+
+    private val preTex = IntArray(1)
+
+    private val preAlign = IntArray(1)
 
     private var texId = 0
 
@@ -91,12 +87,11 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
         }
 
         // save the pre params
-        val preFbo = IntArray(1)
+
         GLES20.glGetIntegerv(GLES20.GL_FRAMEBUFFER_BINDING, preFbo, 0)
-        val preViewPort = IntArray(4)
         GLES20.glGetIntegerv(GLES20.GL_VIEWPORT, preViewPort, 0);
-        val preTex = IntArray(1)
         GLES20.glGetIntegerv(GLES20.GL_ACTIVE_TEXTURE, preTex, 0)
+        GLES20.glGetIntegerv(GLES20.GL_UNPACK_ALIGNMENT, preAlign, 0)
 
         // use fbo
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboId)
@@ -116,6 +111,9 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
         // render each frame
         result?.images?.let { frames ->
             texDirty = true
+            // ALPHA_8 need set pixel store to 1
+            // Or the render result may error or crash
+            GLES20.glPixelStorei(GLES20.GL_UNPACK_ALIGNMENT, 1)
             val preProgram = IntArray(1)
             GLES20.glGetIntegerv(GLES20.GL_CURRENT_PROGRAM, preProgram, 0)
             glProgram.use()
@@ -139,28 +137,13 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, txt)
                 GlUtil.checkGlError()
 
-//                val  txt = GlUtil.generateTexture()
-//                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, txt)
-//                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-//                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-//                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-//                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-//                val buffer = ByteBuffer.allocateDirect(frame.bitmap.byteCount)
-//                frame.bitmap.copyPixelsToBuffer(buffer)
-//                buffer.position(0)
-//                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_ALPHA, frame.bitmap.width, frame.bitmap.height, 0, GLES20.GL_ALPHA, GLES20.GL_UNSIGNED_BYTE, buffer);
-
-                GlUtil.checkGlError()
                 GLES20.glViewport(frame.x, texSize.height - frame.bitmap.height - frame.y, frame.bitmap.width, frame.bitmap.height)
-
                 GLES20.glUniform4f(glProgram.getUniformLocation("u_Color"), r / 255f, g / 255f, b / 255f, a / 255f)
-                GlUtil.checkGlError()
 
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
                 GlUtil.checkGlError()
 
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
-                GlUtil.checkGlError()
                 GlUtil.deleteTexture(txt)
             }
             GLES20.glUseProgram(preProgram[0])
@@ -170,6 +153,7 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
         GLES20.glViewport(preViewPort[0], preViewPort[1], preViewPort[2], preViewPort[3])
         GLES20.glActiveTexture(preTex[0])
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, preFbo[0])
+        GLES20.glPixelStorei(GLES20.GL_UNPACK_ALIGNMENT, preAlign[0])
 
         return texId
     }
