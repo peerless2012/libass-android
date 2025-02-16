@@ -1,4 +1,4 @@
-package io.github.peerless2012.ass.render
+package io.github.peerless2012.ass.media.render
 
 import android.opengl.GLES20
 import androidx.annotation.OptIn
@@ -7,7 +7,7 @@ import androidx.media3.common.util.GlUtil
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.TextureOverlay
-import io.github.peerless2012.ass.kt.ASSRender
+import io.github.peerless2012.ass.ASSRender
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 

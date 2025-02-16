@@ -18,11 +18,11 @@ import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
-import io.github.peerless2012.ass.buildWithAssSupport
+import io.github.peerless2012.ass.media.kt.buildWithAssSupport
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.19:8080/files/c.mkv"
+    private var url = "http://192.168.0.11:8080/files/c.mkv"
 
     private lateinit var player:ExoPlayer
 

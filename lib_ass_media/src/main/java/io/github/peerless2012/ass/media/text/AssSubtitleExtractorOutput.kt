@@ -1,11 +1,11 @@
-package io.github.peerless2012.ass.text
+package io.github.peerless2012.ass.media.text
 
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.ExtractorOutput
 import androidx.media3.extractor.TrackOutput
-import io.github.peerless2012.ass.AssHandler
-import io.github.peerless2012.ass.extractor.AssMatroskaExtractor
+import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.extractor.AssMatroskaExtractor
 
 /**
  * This class is only used by the overlay renderer. It's needed to get the start time of the subtitles.

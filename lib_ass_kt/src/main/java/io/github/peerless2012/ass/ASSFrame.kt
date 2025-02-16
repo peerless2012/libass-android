@@ -1,4 +1,4 @@
-package io.github.peerless2012.ass.kt
+package io.github.peerless2012.ass
 
 class ASSFrame(
     val images: Array<ASSTex>?,

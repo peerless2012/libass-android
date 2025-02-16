@@ -1,4 +1,4 @@
-package io.github.peerless2012.ass.text
+package io.github.peerless2012.ass.media.text
 
 import androidx.media3.common.C
 import androidx.media3.common.Format
@@ -6,8 +6,8 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.extractor.TrackOutput
-import io.github.peerless2012.ass.AssHandler
-import io.github.peerless2012.ass.extractor.AssMatroskaExtractor
+import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.extractor.AssMatroskaExtractor
 import java.util.regex.Pattern
 
 /**

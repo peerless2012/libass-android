@@ -1,4 +1,4 @@
-package io.github.peerless2012.ass
+package io.github.peerless2012.ass.media.kt
 
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
@@ -8,8 +8,9 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.ExtractorsFactory
 import androidx.media3.extractor.mkv.MatroskaExtractor
-import io.github.peerless2012.ass.extractor.AssMatroskaExtractor
-import io.github.peerless2012.ass.parser.AssSubtitleParserFactory
+import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.extractor.AssMatroskaExtractor
+import io.github.peerless2012.ass.media.parser.AssSubtitleParserFactory
 
 @OptIn(UnstableApi::class)
 fun ExoPlayer.Builder.buildWithAssSupport(

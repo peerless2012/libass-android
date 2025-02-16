@@ -1,4 +1,4 @@
-package io.github.peerless2012.ass.parser
+package io.github.peerless2012.ass.media.parser
 
 import androidx.annotation.OptIn
 import androidx.media3.common.Format

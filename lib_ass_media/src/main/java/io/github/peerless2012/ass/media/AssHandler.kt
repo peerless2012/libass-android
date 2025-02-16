@@ -1,4 +1,4 @@
-package io.github.peerless2012.ass
+package io.github.peerless2012.ass.media
 
 import android.util.Log
 import androidx.annotation.OptIn
@@ -10,11 +10,11 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import io.github.peerless2012.ass.kt.ASSRender
-import io.github.peerless2012.ass.kt.ASSTrack
-import io.github.peerless2012.ass.kt.Ass
-import io.github.peerless2012.ass.parser.AssHeaderParser
-import io.github.peerless2012.ass.render.AssOverlayManager
+import io.github.peerless2012.ass.ASSRender
+import io.github.peerless2012.ass.ASSTrack
+import io.github.peerless2012.ass.Ass
+import io.github.peerless2012.ass.media.parser.AssHeaderParser
+import io.github.peerless2012.ass.media.render.AssOverlayManager
 
 /**
  * Handles ASS subtitle rendering and integration with ExoPlayer.

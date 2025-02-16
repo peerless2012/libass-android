@@ -1,4 +1,4 @@
-package io.github.peerless2012.ass.extractor
+package io.github.peerless2012.ass.media.extractor
 
 import androidx.annotation.OptIn
 import androidx.media3.common.util.ParsableByteArray
@@ -8,8 +8,8 @@ import androidx.media3.extractor.ExtractorOutput
 import androidx.media3.extractor.mkv.EbmlProcessor
 import androidx.media3.extractor.mkv.MatroskaExtractor
 import androidx.media3.extractor.text.SubtitleParser
-import io.github.peerless2012.ass.AssHandler
-import io.github.peerless2012.ass.text.AssSubtitleExtractorOutput
+import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.text.AssSubtitleExtractorOutput
 
 @OptIn(UnstableApi::class)
 class AssMatroskaExtractor(

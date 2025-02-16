@@ -1,6 +1,5 @@
-package io.github.peerless2012.ass.parser
+package io.github.peerless2012.ass.media.parser
 
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.Format
 import androidx.media3.common.text.Cue
@@ -8,8 +7,8 @@ import androidx.media3.common.util.Consumer
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.SubtitleParser
-import io.github.peerless2012.ass.AssHandler
-import io.github.peerless2012.ass.kt.ASSTrack
+import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.ASSTrack
 
 @OptIn(UnstableApi::class)
 class AssSubtitleParser(
@@ -37,7 +36,6 @@ class AssSubtitleParser(
         if (surfaceSizeDirty) {
             val surfaceSize = assHandler.surfaceSize
             if (surfaceSize.width > 0 && surfaceSize.height > 0) {
-                Log.i("AssParser", "surface size = $surfaceSize")
                 assHandler.render?.setFrameSize(surfaceSize.width, surfaceSize.height)
             }
             surfaceSizeDirty = false
@@ -80,10 +78,8 @@ class AssSubtitleParser(
         val events = track.getEvents().orEmpty()
         val cues = mutableListOf<Cue>()
         events.forEach {event ->
-            Log.i("AssParser", "event : $event")
-            val texs = assHandler.render?.renderFrame(event.start + fadeIn, false)
-            texs?.images?.forEach { tex ->
-                Log.i("AssParser", "tex : x = " + tex.x + ", y = " + tex.y + ", width = " + tex.bitmap.width + ", height = " + tex.bitmap.height)
+            val frames = assHandler.render?.renderFrame(event.start + fadeIn, false)
+            frames?.images?.forEach { tex ->
                 val cue = Cue.Builder()
                     .setBitmap(tex.bitmap)
                     .setPosition(tex.x / assHandler.surfaceSize.width.toFloat())

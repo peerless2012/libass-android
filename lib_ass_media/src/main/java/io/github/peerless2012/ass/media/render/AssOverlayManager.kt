@@ -1,10 +1,10 @@
-package io.github.peerless2012.ass.render
+package io.github.peerless2012.ass.media.render
 
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.OverlayEffect
 import androidx.media3.exoplayer.ExoPlayer
-import io.github.peerless2012.ass.kt.ASSRender
+import io.github.peerless2012.ass.ASSRender
 
 @OptIn(UnstableApi::class)
 class AssOverlayManager(
