@@ -11,14 +11,15 @@ import androidx.media3.extractor.mkv.MatroskaExtractor
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.extractor.AssMatroskaExtractor
 import io.github.peerless2012.ass.media.parser.AssSubtitleParserFactory
+import io.github.peerless2012.ass.media.type.AssRenderType
 
 @OptIn(UnstableApi::class)
 fun ExoPlayer.Builder.buildWithAssSupport(
     dataSourceFactory: DataSource.Factory,
     extractorsFactory: ExtractorsFactory = DefaultExtractorsFactory(),
-    useEffectsRenderer: Boolean = true
+    renderType: AssRenderType = AssRenderType.LEGACY
 ): ExoPlayer {
-    val assHandler = AssHandler(useEffectsRenderer)
+    val assHandler = AssHandler(renderType)
     val assSubtitleParserFactory = AssSubtitleParserFactory(assHandler)
 
     val mediaSourceFactory = DefaultMediaSourceFactory(

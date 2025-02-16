@@ -19,6 +19,7 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
 import io.github.peerless2012.ass.media.kt.buildWithAssSupport
+import io.github.peerless2012.ass.media.type.AssRenderType
 
 class MainActivity : AppCompatActivity() {
 
@@ -46,7 +47,7 @@ class MainActivity : AppCompatActivity() {
             .buildWithAssSupport(
                 dataSourceFactory = DefaultDataSource.Factory(this),
                 extractorsFactory = DefaultExtractorsFactory(),
-                useEffectsRenderer = true
+                renderType = AssRenderType.OPEN_GL
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player

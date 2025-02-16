@@ -15,16 +15,17 @@ import io.github.peerless2012.ass.ASSTrack
 import io.github.peerless2012.ass.Ass
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssOverlayManager
+import io.github.peerless2012.ass.media.type.AssRenderType
 
 /**
  * Handles ASS subtitle rendering and integration with ExoPlayer.
  *
  * This class listens to ExoPlayer events and manages the creation, selection, and rendering of ASS
  * subtitle tracks.
- * @param useEffectsRenderer If true, the effects renderer is used for subtitle overlays.
+ * @param renderType The subtitle render type.
  */
 @OptIn(UnstableApi::class)
-class AssHandler(val useEffectsRenderer: Boolean) : Listener {
+class AssHandler(private val renderType: AssRenderType) : Listener {
 
     /** The ASS instance used for creating tracks and renderers. This is lazy to avoid loading
      * libass if the played media does not have ASS tracks. */
@@ -60,8 +61,8 @@ class AssHandler(val useEffectsRenderer: Boolean) : Listener {
      */
     fun init(player: ExoPlayer) {
         player.addListener(this)
-        if (useEffectsRenderer) {
-            overlayManager = AssOverlayManager(player, true)
+        if (renderType != AssRenderType.LEGACY) {
+            overlayManager = AssOverlayManager(player, renderType == AssRenderType.OPEN_GL)
         }
     }
 
@@ -153,7 +154,7 @@ class AssHandler(val useEffectsRenderer: Boolean) : Listener {
         createRenderIfNeeded()
 
         val track = ass.createTrack()
-        val header = AssHeaderParser.parse(format, useEffectsRenderer)
+        val header = AssHeaderParser.parse(format, renderType != AssRenderType.LEGACY)
         track.readBuffer(header)
         availableTracks[format.id!!] = track
         return track
