@@ -8,6 +8,7 @@ import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.DefaultSubtitleParserFactory
 import androidx.media3.extractor.text.SubtitleParser
 import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.type.AssRenderType
 
 /**
  * @Author peerless2012
@@ -32,7 +33,7 @@ class AssSubtitleParserFactory(private val assHandler: AssHandler): SubtitlePars
     override fun create(format: Format): SubtitleParser {
         return if (format.sampleMimeType == MimeTypes.TEXT_SSA) {
             val track = assHandler.createTrack(format)
-            if (assHandler.useEffectsRenderer) {
+            if (assHandler.renderType != AssRenderType.LEGACY) {
                 // The effects renderer calls libass directly, so we want to ignore parse events
                 NoOpSubtitleParser()
             } else {
