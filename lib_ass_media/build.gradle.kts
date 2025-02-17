@@ -37,7 +37,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.media3.exo)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.effect)
@@ -47,9 +46,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.DEFAULT)
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     // https://vanniktech.github.io/gradle-maven-publish-plugin/what/
     configure(AndroidSingleVariantLibrary())
     signAllPublications()
