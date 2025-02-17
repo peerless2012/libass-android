@@ -10,6 +10,7 @@ import androidx.media3.extractor.mkv.MatroskaExtractor
 import androidx.media3.extractor.text.SubtitleParser
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.text.AssSubtitleExtractorOutput
+import io.github.peerless2012.ass.media.type.AssRenderType
 
 @OptIn(UnstableApi::class)
 class AssMatroskaExtractor(
@@ -40,7 +41,7 @@ class AssMatroskaExtractor(
     override fun startMasterElement(id: Int, contentPosition: Long, contentSize: Long) {
         when (id) {
             ID_EBML -> {
-                if (assHandler.useEffectsRenderer) {
+                if (assHandler.renderType != AssRenderType.LEGACY) {
                     val currentExtractor = extractorOutput.get(this) as ExtractorOutput
                     if (currentExtractor !is AssSubtitleExtractorOutput) {
                         extractorOutput.set(

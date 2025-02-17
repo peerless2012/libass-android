@@ -25,7 +25,7 @@ import io.github.peerless2012.ass.media.type.AssRenderType
  * @param renderType The subtitle render type.
  */
 @OptIn(UnstableApi::class)
-class AssHandler(private val renderType: AssRenderType) : Listener {
+class AssHandler(val renderType: AssRenderType) : Listener {
 
     /** The ASS instance used for creating tracks and renderers. This is lazy to avoid loading
      * libass if the played media does not have ASS tracks. */
