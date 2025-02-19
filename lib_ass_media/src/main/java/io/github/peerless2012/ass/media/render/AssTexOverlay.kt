@@ -8,11 +8,12 @@ import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.TextureOverlay
 import io.github.peerless2012.ass.ASSRender
+import io.github.peerless2012.ass.media.executor.AssExecutor
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 @OptIn(UnstableApi::class)
-class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
+class AssTexOverlay(private val render: ASSRender) : TextureOverlay() {
 
     private val vertexShaderCode = """
             attribute vec4 a_Position;
@@ -73,21 +74,22 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
 
     private var texCoordBufferId = 0
 
+    private lateinit var executor: AssExecutor
+
     override fun getTextureId(presentationTimeUs: Long): Int {
-        val result = renderer.renderFrame(presentationTimeUs / 1000, false)
+        val assFrame = executor.renderFrame(presentationTimeUs)
 
         // if content not change, just return the tex
-        if (result != null && result.changed == 0) {
+        if (assFrame != null && assFrame.changed == 0) {
             return texId
         }
 
         // no content && tex is clean, just return the tex
-        if (result == null && !texDirty) {
+        if (assFrame == null && !texDirty) {
             return texId
         }
 
         // save the pre params
-
         GLES20.glGetIntegerv(GLES20.GL_FRAMEBUFFER_BINDING, preFbo, 0)
         GLES20.glGetIntegerv(GLES20.GL_VIEWPORT, preViewPort, 0);
         GLES20.glGetIntegerv(GLES20.GL_ACTIVE_TEXTURE, preTex, 0)
@@ -109,7 +111,7 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
         // render each frame
-        result?.images?.let { frames ->
+        assFrame?.images?.let { frames ->
             texDirty = true
             // ALPHA_8 need set pixel store to 1
             // Or the render result may error or crash
@@ -165,7 +167,8 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
     override fun configure(videoSize: Size) {
         super.configure(videoSize)
         this.texSize = videoSize
-        renderer.setFrameSize(videoSize.width, videoSize.height)
+        executor = AssExecutor(render)
+        render.setFrameSize(videoSize.width, videoSize.height)
         texId = GlUtil.createTexture(videoSize.width, videoSize.height, false)
         fboId = GlUtil.createFboForTexture(texId)
         glProgram = GlProgram(vertexShaderCode, fragmentShaderCode)
@@ -203,6 +206,7 @@ class AssTexOverlay(private val renderer: ASSRender) : TextureOverlay() {
         GlUtil.deleteBuffer(vertexBufferId)
         GlUtil.deleteBuffer(texCoordBufferId)
         glProgram.delete()
+        executor.shutdown()
         super.release()
     }
 }

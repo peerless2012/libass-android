@@ -8,35 +8,42 @@ import android.graphics.PorterDuffXfermode
 import androidx.annotation.OptIn
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
+import io.github.peerless2012.ass.ASSFrame
 import io.github.peerless2012.ass.ASSRender
+import io.github.peerless2012.ass.media.executor.AssExecutor
 
 @OptIn(UnstableApi::class)
-class AssCanvasOverlay(private val renderer: ASSRender) : CanvasOverlay(true) {
+class AssCanvasOverlay(private val render: ASSRender) : CanvasOverlay(true) {
 
     private val paint = Paint().apply {
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
     }
 
+    private lateinit var executor: AssExecutor
+
     private var texDirty = true
 
     override fun configure(videoSize: Size) {
         super.configure(videoSize)
-        renderer.setFrameSize(videoSize.width, videoSize.height)
+        executor = AssExecutor(render)
+        render.setFrameSize(videoSize.width, videoSize.height)
     }
 
     override fun onDraw(canvas: Canvas, presentationTimeUs: Long) {
-        val result = renderer.renderFrame(presentationTimeUs / 1000, true)
-        if (result != null && result.changed == 0) {
+        val assFrame: ASSFrame? = executor.renderFrame(presentationTimeUs)
+
+        if (assFrame != null && assFrame.changed == 0) {
             return
         }
-        if (result == null && !texDirty) {
+
+        if (assFrame == null && !texDirty) {
             return
         }
 
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         texDirty = false
 
-        result?.images?.let { frames ->
+        assFrame?.images?.let { frames ->
             texDirty = true
             frames.forEach { frame ->
                 val r = frame.color shr 24 and 0xFF
@@ -50,4 +57,10 @@ class AssCanvasOverlay(private val renderer: ASSRender) : CanvasOverlay(true) {
             }
         }
     }
+
+    override fun release() {
+        executor.shutdown()
+        super.release()
+    }
+
 }
