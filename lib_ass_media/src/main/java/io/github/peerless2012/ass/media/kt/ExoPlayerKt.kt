@@ -27,6 +27,9 @@ fun ExoPlayer.Builder.buildWithAssSupport(
         extractorsFactory.withAssMkvSupport(assSubtitleParserFactory, assHandler)
     )
 
+    // The external subtitle will create parser directly from SubtitleParserFactory.
+    mediaSourceFactory.setSubtitleParserFactory(assSubtitleParserFactory)
+
     val player = this
         .setMediaSourceFactory(mediaSourceFactory)
         .build()

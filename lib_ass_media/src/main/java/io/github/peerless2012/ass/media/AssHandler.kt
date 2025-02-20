@@ -154,9 +154,17 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         createRenderIfNeeded()
 
         val track = ass.createTrack()
-        val header = AssHeaderParser.parse(format, renderType != AssRenderType.LEGACY)
-        track.readBuffer(header)
-        availableTracks[format.id!!] = track
+        if (format.initializationData.size > 0) {
+            val header = AssHeaderParser.parse(format, renderType != AssRenderType.LEGACY)
+            track.readBuffer(header)
+        }
+        if (format.id!!.contains(":")) {
+            availableTracks[format.id!!] = track
+        } else {
+            // Hack
+            // TODO Find a better way
+            availableTracks["1:" + format.id!!] = track
+        }
         return track
     }
 

@@ -1,5 +1,6 @@
 package io.github.peerless2012.ass.demo
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -18,12 +19,15 @@ import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.common.collect.ImmutableList
 import io.github.peerless2012.ass.media.kt.buildWithAssSupport
 import io.github.peerless2012.ass.media.type.AssRenderType
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.11:8080/files/c.mkv"
+    private var url = "http://192.168.0.11:8080/files/f.mp4"
+
+    private var subtitle = "http://192.168.0.11:8080/files/test-subs-layer.ass"
 
     private lateinit var player:ExoPlayer
 
@@ -47,11 +51,20 @@ class MainActivity : AppCompatActivity() {
             .buildWithAssSupport(
                 dataSourceFactory = DefaultDataSource.Factory(this),
                 extractorsFactory = DefaultExtractorsFactory(),
-                renderType = AssRenderType.OPEN_GL
+                renderType = AssRenderType.CANVAS
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player
-        player.setMediaItem(MediaItem.fromUri(url))
+        val config = MediaItem.SubtitleConfiguration
+            .Builder(Uri.parse(subtitle))
+            .setMimeType("text/x-ssa")
+            .setLanguage("en")
+            .setId("100")
+            .build()
+        val mediaItem = MediaItem.Builder()
+            .setUri(url)
+            .setSubtitleConfigurations(ImmutableList.of(config))
+        player.setMediaItem(mediaItem.build())
         player.prepare()
     }
 
