@@ -2,13 +2,11 @@ package io.github.peerless2012.ass.media.parser
 
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
-import androidx.media3.common.util.Consumer
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.DefaultSubtitleParserFactory
 import androidx.media3.extractor.text.SubtitleParser
-import io.github.peerless2012.ass.ASSTrack
 import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.common.ROLE_FLAG_EXTERNAL_SUBTITLES
 import io.github.peerless2012.ass.media.type.AssRenderType
 
 /**
@@ -33,32 +31,22 @@ class AssSubtitleParserFactory(private val assHandler: AssHandler): SubtitlePars
 
     override fun create(format: Format): SubtitleParser {
         return if (format.sampleMimeType == MimeTypes.TEXT_SSA) {
+            val externalSubtitles = (format.roleFlags and ROLE_FLAG_EXTERNAL_SUBTITLES) > 0
             val track = assHandler.createTrack(format)
-            if (assHandler.renderType != AssRenderType.LEGACY) {
-                // The effects renderer calls libass directly, so we want to ignore parse events
-                NoOpSubtitleParser(assHandler, track)
+            if (externalSubtitles) {
+                AssFullSubtitleParser(assHandler.renderType == AssRenderType.LEGACY,
+                    assHandler,
+                    track)
             } else {
-                AssSubtitleParser(assHandler, track)
+                if (assHandler.renderType != AssRenderType.LEGACY) {
+                    AssNoOpSubtitleParser()
+                } else {
+                    AssSegmentSubtitleParser(assHandler, track)
+                }
             }
         } else {
             defaultSubtitleParserFactory.create(format)
         }
     }
 
-    private class NoOpSubtitleParser(private val assHandler: AssHandler,
-                                     private val track: ASSTrack) : SubtitleParser {
-        override fun parse(
-            data: ByteArray,
-            offset: Int,
-            length: Int,
-            outputOptions: SubtitleParser.OutputOptions,
-            output: Consumer<CuesWithTiming>
-        ) {
-            track.readBuffer(data, offset, length)
-        }
-
-        override fun getCueReplacementBehavior(): Int {
-            return Format.CUE_REPLACEMENT_BEHAVIOR_REPLACE
-        }
-    }
 }

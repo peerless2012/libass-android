@@ -1,5 +1,6 @@
 package io.github.peerless2012.ass.demo
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
@@ -20,19 +21,21 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.common.collect.ImmutableList
+import io.github.peerless2012.ass.media.common.ROLE_FLAG_EXTERNAL_SUBTITLES
 import io.github.peerless2012.ass.media.kt.buildWithAssSupport
 import io.github.peerless2012.ass.media.type.AssRenderType
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.11:8080/files/f.mp4"
+    private var url = "http://192.168.0.16:8080/files/f.mp4"
 
-    private var subtitle = "http://192.168.0.11:8080/files/test-subs-layer.ass"
+    private var subtitle = "http://192.168.0.16:8080/files/f.ass"
 
     private lateinit var player:ExoPlayer
 
     private lateinit var playerView: PlayerView
 
+    @SuppressLint("WrongConstant")
     @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -51,7 +54,7 @@ class MainActivity : AppCompatActivity() {
             .buildWithAssSupport(
                 dataSourceFactory = DefaultDataSource.Factory(this),
                 extractorsFactory = DefaultExtractorsFactory(),
-                renderType = AssRenderType.CANVAS
+                renderType = AssRenderType.LEGACY
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player
@@ -59,7 +62,9 @@ class MainActivity : AppCompatActivity() {
             .Builder(Uri.parse(subtitle))
             .setMimeType("text/x-ssa")
             .setLanguage("en")
+            .setLabel("External ass")
             .setId("100")
+            .setRoleFlags(ROLE_FLAG_EXTERNAL_SUBTITLES)
             .build()
         val mediaItem = MediaItem.Builder()
             .setUri(url)

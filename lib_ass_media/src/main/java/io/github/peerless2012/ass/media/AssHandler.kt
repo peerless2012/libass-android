@@ -13,6 +13,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import io.github.peerless2012.ass.ASSRender
 import io.github.peerless2012.ass.ASSTrack
 import io.github.peerless2012.ass.Ass
+import io.github.peerless2012.ass.media.common.ROLE_FLAG_EXTERNAL_SUBTITLES
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssOverlayManager
 import io.github.peerless2012.ass.media.type.AssRenderType
@@ -158,13 +159,18 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             val header = AssHeaderParser.parse(format, renderType != AssRenderType.LEGACY)
             track.readBuffer(header)
         }
-        if (format.id!!.contains(":")) {
-            availableTracks[format.id!!] = track
+        if (format.roleFlags and ROLE_FLAG_EXTERNAL_SUBTITLES > 0) {
+            if (format.id!!.contains(":")) {
+                availableTracks[format.id!!] = track
+            } else {
+                // Hack
+                // TODO Find a better way
+                availableTracks["1:" + format.id!!] = track
+            }
         } else {
-            // Hack
-            // TODO Find a better way
-            availableTracks["1:" + format.id!!] = track
+            availableTracks[format.id!!] = track
         }
+
         return track
     }
 
@@ -185,6 +191,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
 
     /**
      * Reads a dialogue into the track of the given [trackId].
+     * TODO This should move to executor.
      */
     fun readTrackDialogue(
         trackId: String?,
