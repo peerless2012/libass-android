@@ -24,12 +24,8 @@ class AssExecutor(private val render: ASSRender) {
     public fun renderFrame(presentationTimeUs: Long): ASSFrame? {
         var assFrame: ASSFrame? = null
         if (executorBusy) {
-            // render thread is busy
-            assFrame = lastFrame
-            if (assFrame == null) {
-                // no new frame, keep last content
-                assFrame = assFrameNotChange
-            }
+            // render thread is busy, keep last content
+            assFrame = assFrameNotChange
         } else {
             // submit render task
             val future = executorService.submit{
@@ -39,7 +35,11 @@ class AssExecutor(private val render: ASSRender) {
                 lastFrame
             }
             try {
-                assFrame = future.get(8, TimeUnit.MILLISECONDS)
+                assFrame = if (lastFrame != null) {
+                    lastFrame
+                } else {
+                    future.get(8, TimeUnit.MILLISECONDS)
+                }
             } catch (exception: Exception) {
                 // task timeout
                 assFrame = lastFrame
