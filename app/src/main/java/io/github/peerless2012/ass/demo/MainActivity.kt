@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
@@ -49,12 +50,11 @@ class MainActivity : AppCompatActivity() {
         val toolbar = findViewById<MaterialToolbar>(R.id.main_toolbar)
         setSupportActionBar(toolbar)
 
-
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
                 dataSourceFactory = DefaultDataSource.Factory(this),
                 extractorsFactory = DefaultExtractorsFactory(),
-                renderType = AssRenderType.LEGACY
+                renderType = AssRenderType.CANVAS
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player
@@ -64,6 +64,7 @@ class MainActivity : AppCompatActivity() {
             .setLanguage("en")
             .setLabel("External ass")
             .setId("100")
+            .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
             .setRoleFlags(ROLE_FLAG_EXTERNAL_SUBTITLES)
             .build()
         val mediaItem = MediaItem.Builder()

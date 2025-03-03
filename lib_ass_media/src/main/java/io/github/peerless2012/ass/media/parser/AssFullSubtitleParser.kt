@@ -8,13 +8,13 @@ import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.SubtitleParser
 import io.github.peerless2012.ass.ASSTrack
 import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.type.AssRenderType
 
 /**
  * Ass full subtitle parser.
  */
 @UnstableApi
 class AssFullSubtitleParser(
-    private val render: Boolean,
     assHandler: AssHandler,
     track: ASSTrack
 ) : AssSubtitleParser(assHandler, track) {
@@ -27,7 +27,7 @@ class AssFullSubtitleParser(
     ) {
         super.parse(data, offset, length, outputOptions, output)
         track.readBuffer(data, offset, length)
-        if (render) {
+        if (assHandler.renderType == AssRenderType.LEGACY) {
             val events = track.getEvents()
             events?.forEach {event ->
                 val cues = mutableListOf<Cue>()

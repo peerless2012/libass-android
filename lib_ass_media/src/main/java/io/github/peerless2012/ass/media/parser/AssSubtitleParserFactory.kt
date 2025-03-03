@@ -34,9 +34,7 @@ class AssSubtitleParserFactory(private val assHandler: AssHandler): SubtitlePars
             val externalSubtitles = (format.roleFlags and ROLE_FLAG_EXTERNAL_SUBTITLES) > 0
             val track = assHandler.createTrack(format)
             if (externalSubtitles) {
-                AssFullSubtitleParser(assHandler.renderType == AssRenderType.LEGACY,
-                    assHandler,
-                    track)
+                AssFullSubtitleParser(assHandler, track)
             } else {
                 if (assHandler.renderType != AssRenderType.LEGACY) {
                     AssNoOpSubtitleParser()
