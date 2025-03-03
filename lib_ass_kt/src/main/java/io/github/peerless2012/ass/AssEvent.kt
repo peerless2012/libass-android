@@ -7,7 +7,7 @@ package io.github.peerless2012.ass
  * @Version V1.0
  * @Description
  */
-data class ASSEvent(
+data class AssEvent(
     val start: Long,
     val duration: Long,
     val order: Int,

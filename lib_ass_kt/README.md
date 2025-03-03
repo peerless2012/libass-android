@@ -1,5 +1,5 @@
 # ASS Kt
-lib_ass_kt is a kotlin wrapper for libass native api.
+A kotlin wrapper for libass native api.
 
 App want to use libass in java/kotlin can use this module.
 

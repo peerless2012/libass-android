@@ -1,5 +1,5 @@
 # ASS Media
-lib_ass_media is a media3 extend library for libass.
+A media3 extend library for libass.
 
 App use media3 can use this module to add ass for your player.
 
@@ -67,9 +67,8 @@ Due to test, the `OPEN_GL` will save 1/3 time when render.
     ```
     layer = ExoPlayer.Builder(this)
     .buildWithAssSupport(
-        dataSourceFactory = DefaultDataSource.Factory(this),
-        extractorsFactory = DefaultExtractorsFactory(),
-        renderType = AssRenderType.OPEN_GL
+        this,
+        AssRenderType.OPEN_GL
     )
     ```
 
@@ -79,8 +78,8 @@ This only happens in `LEGACY` mode, see:
 * [ASS render in a wrong order](https://github.com/androidx/media/issues/2124)
 * [Fix cue render order for ass/ssa](https://github.com/androidx/media/pull/2137)
 
-### 2. Ass render will block video when the ass is very very complex.
-This only happens in `CANVAS` and `OPEN_GL` mode.
+### 2. External ass subtitles will fallback to default ass render.
+This will happens in all mode.
 
 ## Note
 The libass will render a event to a bitmap with only alpha channel. Current we blend color and alpha to an ARGB bitmap.

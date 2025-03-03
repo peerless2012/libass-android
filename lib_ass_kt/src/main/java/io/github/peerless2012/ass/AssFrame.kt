@@ -1,6 +1,6 @@
 package io.github.peerless2012.ass
 
-class ASSFrame(
-    val images: Array<ASSTex>?,
+class AssFrame(
+    val images: Array<AssTex>?,
     val changed: Int,
 )

@@ -7,7 +7,7 @@ package io.github.peerless2012.ass
  * @Version V1.0
  * @Description
  */
-class ASSTrack(private val ass: Long) {
+class AssTrack(private val ass: Long) {
 
     companion object {
 
@@ -21,7 +21,7 @@ class ASSTrack(private val ass: Long) {
         external fun nativeAssTrackGetHeight(track: Long): Int
 
         @JvmStatic
-        external fun nativeAssTrackGetEvents(track: Long): Array<ASSEvent>?
+        external fun nativeAssTrackGetEvents(track: Long): Array<AssEvent>?
 
         @JvmStatic
         external fun nativeAssTrackClearEvents(track: Long)
@@ -46,7 +46,7 @@ class ASSTrack(private val ass: Long) {
         return nativeAssTrackGetHeight(nativeAssTrack)
     }
 
-    public fun getEvents(): Array<ASSEvent>? {
+    public fun getEvents(): Array<AssEvent>? {
         return nativeAssTrackGetEvents(nativeAssTrack)
     }
 

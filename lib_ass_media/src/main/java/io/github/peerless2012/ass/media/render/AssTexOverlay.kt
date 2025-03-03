@@ -7,13 +7,13 @@ import androidx.media3.common.util.GlUtil
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.TextureOverlay
-import io.github.peerless2012.ass.ASSRender
+import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.media.executor.AssExecutor
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 @OptIn(UnstableApi::class)
-class AssTexOverlay(private val render: ASSRender) : TextureOverlay() {
+class AssTexOverlay(private val render: AssRender) : TextureOverlay() {
 
     private val vertexShaderCode = """
             attribute vec4 a_Position;

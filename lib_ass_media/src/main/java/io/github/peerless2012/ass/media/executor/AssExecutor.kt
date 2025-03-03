@@ -1,7 +1,7 @@
 package io.github.peerless2012.ass.media.executor
 
-import io.github.peerless2012.ass.ASSFrame
-import io.github.peerless2012.ass.ASSRender
+import io.github.peerless2012.ass.AssFrame
+import io.github.peerless2012.ass.AssRender
 import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -9,20 +9,20 @@ import java.util.concurrent.TimeUnit
 /**
  * Executor to render.
  */
-class AssExecutor(private val render: ASSRender) {
+class AssExecutor(private val render: AssRender) {
 
-    private val assFrameNotChange = ASSFrame(null, 0)
+    private val assFrameNotChange = AssFrame(null, 0)
 
     private val executor = Executors.newSingleThreadExecutor()
 
-    private val executorService = ExecutorCompletionService<ASSFrame?>(executor)
+    private val executorService = ExecutorCompletionService<AssFrame?>(executor)
 
-    private var lastFrame: ASSFrame? = null
+    private var lastFrame: AssFrame? = null
 
     private var executorBusy = false
 
-    public fun renderFrame(presentationTimeUs: Long): ASSFrame? {
-        var assFrame: ASSFrame? = null
+    public fun renderFrame(presentationTimeUs: Long): AssFrame? {
+        var assFrame: AssFrame? = null
         if (executorBusy) {
             // render thread is busy, keep last content
             assFrame = assFrameNotChange

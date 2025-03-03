@@ -1,5 +1,5 @@
 # ASS
-lib_ass is a native build library with prefab feature, this module contains libass.so and the header files.
+A native build library with prefab feature, this module contains libass.so and the header files.
 
 App want to use libass in C/C++ can use this module.
 

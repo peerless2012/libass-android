@@ -12,9 +12,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
@@ -23,9 +21,9 @@ import io.github.peerless2012.ass.media.type.AssRenderType
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.11:8080/files/c.mkv"
+    private var url = "http://192.168.0.16:8080/files/k.mkv"
 
-    private lateinit var player:ExoPlayer
+    private lateinit var player: ExoPlayer
 
     private lateinit var playerView: PlayerView
 
@@ -42,12 +40,10 @@ class MainActivity : AppCompatActivity() {
         val toolbar = findViewById<MaterialToolbar>(R.id.main_toolbar)
         setSupportActionBar(toolbar)
 
-
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
-                dataSourceFactory = DefaultDataSource.Factory(this),
-                extractorsFactory = DefaultExtractorsFactory(),
-                renderType = AssRenderType.OPEN_GL
+                this,
+                AssRenderType.OPEN_GL
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player

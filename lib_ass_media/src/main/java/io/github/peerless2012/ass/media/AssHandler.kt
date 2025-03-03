@@ -10,8 +10,8 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import io.github.peerless2012.ass.ASSRender
-import io.github.peerless2012.ass.ASSTrack
+import io.github.peerless2012.ass.AssRender
+import io.github.peerless2012.ass.AssTrack
 import io.github.peerless2012.ass.Ass
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssOverlayManager
@@ -32,15 +32,15 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     val ass by lazy { Ass() }
 
     /** The current ASS renderer. It's created as soon as a ASS track is detected. */
-    var render: ASSRender? = null
+    var render: AssRender? = null
         private set
 
     /** The currently selected ASS track. */
-    var track: ASSTrack? = null
+    var track: AssTrack? = null
         private set
 
     /** The available ASS tracks in the current media. */
-    private val availableTracks = mutableMapOf<String, ASSTrack>()
+    private val availableTracks = mutableMapOf<String, AssTrack>()
 
     /** The size of the video track. */
     private var videoSize = Size(0, 0)
@@ -149,7 +149,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      * @param format The format of the ASS track.
      * @return The created ASS track.
      */
-    fun createTrack(format: Format): ASSTrack {
+    fun createTrack(format: Format): AssTrack {
         // Ensure the renderer is created before creating tracks.
         createRenderIfNeeded()
 

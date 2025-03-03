@@ -1,8 +1,10 @@
 package io.github.peerless2012.ass.media.kt
 
+import android.content.Context
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.DefaultExtractorsFactory
@@ -15,9 +17,10 @@ import io.github.peerless2012.ass.media.type.AssRenderType
 
 @OptIn(UnstableApi::class)
 fun ExoPlayer.Builder.buildWithAssSupport(
-    dataSourceFactory: DataSource.Factory,
-    extractorsFactory: ExtractorsFactory = DefaultExtractorsFactory(),
-    renderType: AssRenderType = AssRenderType.LEGACY
+    context: Context,
+    renderType: AssRenderType = AssRenderType.LEGACY,
+    dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context),
+    extractorsFactory: ExtractorsFactory = DefaultExtractorsFactory()
 ): ExoPlayer {
     val assHandler = AssHandler(renderType)
     val assSubtitleParserFactory = AssSubtitleParserFactory(assHandler)
