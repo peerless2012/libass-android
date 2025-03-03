@@ -6,7 +6,7 @@ import androidx.media3.common.util.Consumer
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.SubtitleParser
-import io.github.peerless2012.ass.ASSTrack
+import io.github.peerless2012.ass.AssTrack
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.type.AssRenderType
 
@@ -16,7 +16,7 @@ import io.github.peerless2012.ass.media.type.AssRenderType
 @UnstableApi
 class AssFullSubtitleParser(
     assHandler: AssHandler,
-    track: ASSTrack
+    track: AssTrack
 ) : AssSubtitleParser(assHandler, track) {
     override fun parse(
         data: ByteArray,
