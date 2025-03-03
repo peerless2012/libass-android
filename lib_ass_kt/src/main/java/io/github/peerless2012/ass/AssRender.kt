@@ -7,7 +7,7 @@ package io.github.peerless2012.ass
  * @Version V1.0
  * @Description
  */
-class ASSRender(nativeAss: Long) {
+class AssRender(nativeAss: Long) {
 
     companion object {
 
@@ -24,7 +24,7 @@ class ASSRender(nativeAss: Long) {
         external fun nativeAssRenderSetFrameSize(render: Long, width: Int, height: Int)
 
         @JvmStatic
-        external fun nativeAssRenderFrame(render: Long, track: Long, time: Long, onlyAlpha: Boolean): ASSFrame?
+        external fun nativeAssRenderFrame(render: Long, track: Long, time: Long, onlyAlpha: Boolean): AssFrame?
 
         @JvmStatic
         external fun nativeAssRenderDeinit(render: Long)
@@ -32,9 +32,9 @@ class ASSRender(nativeAss: Long) {
 
     private val nativeRender: Long = nativeAssRenderInit(nativeAss)
 
-    private var track: ASSTrack? = null
+    private var track: AssTrack? = null
 
-    public fun setTrack(track: ASSTrack?) {
+    public fun setTrack(track: AssTrack?) {
         this.track = track
     }
 
@@ -50,7 +50,7 @@ class ASSRender(nativeAss: Long) {
         nativeAssRenderSetFrameSize(nativeRender, width, height)
     }
 
-    public fun renderFrame(time: Long, onlyAlpha: Boolean): ASSFrame? {
+    public fun renderFrame(time: Long, onlyAlpha: Boolean): AssFrame? {
         return track?.let { nativeAssRenderFrame(nativeRender, it.nativeAssTrack, time, onlyAlpha) }
     }
 

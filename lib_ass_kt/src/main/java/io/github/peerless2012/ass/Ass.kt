@@ -31,12 +31,12 @@ class Ass {
 
     private val nativeAss: Long = nativeAssInit()
 
-    public fun createTrack(): ASSTrack {
-        return ASSTrack(nativeAss)
+    public fun createTrack(): AssTrack {
+        return AssTrack(nativeAss)
     }
 
-    public fun createRender(): ASSRender {
-        return ASSRender(nativeAss)
+    public fun createRender(): AssRender {
+        return AssRender(nativeAss)
     }
 
     public fun addFont(name: String, buffer: ByteArray) {

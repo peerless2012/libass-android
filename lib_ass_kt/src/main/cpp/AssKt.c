@@ -60,7 +60,7 @@ jint nativeAssTrackGetWidth(JNIEnv* env, jclass clazz, jlong track) {
 }
 
 jobjectArray nativeAssTrackGetEvents(JNIEnv* env, jclass clazz, jlong track) {
-    jclass eventClass = (*env)->FindClass(env, "io/github/peerless2012/ass/ASSEvent");
+    jclass eventClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssEvent");
     if (eventClass == NULL) {
         return NULL;
     }
@@ -148,7 +148,7 @@ static JNINativeMethod trackMethodTable[] = {
         {"nativeAssTrackInit", "(J)J", (void*)nativeAssTrackInit},
         {"nativeAssTrackGetWidth", "(J)I", (void*) nativeAssTrackGetWidth},
         {"nativeAssTrackGetHeight", "(J)I", (void*) nativeAssTrackGetHeight},
-        {"nativeAssTrackGetEvents", "(J)[Lio/github/peerless2012/ass/ASSEvent;", (void*) nativeAssTrackGetEvents},
+        {"nativeAssTrackGetEvents", "(J)[Lio/github/peerless2012/ass/AssEvent;", (void*) nativeAssTrackGetEvents},
         {"nativeAssTrackClearEvents", "(J)V", (void*) nativeAssTrackClearEvents},
         {"nativeAssTrackReadBuffer", "(J[BII)V", (void*)nativeAssTrackReadBuffer},
         {"nativeAssTrackReadChunk", "(JJJ[BII)V", (void*)nativeAssTrackReadChunk},
@@ -267,8 +267,8 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
     if (image == NULL) {
         return NULL;
     }
-    jclass assFrameClass = (*env)->FindClass(env, "io/github/peerless2012/ass/ASSFrame");
-    jmethodID assFrameConstructor = (*env)->GetMethodID(env, assFrameClass, "<init>", "([Lio/github/peerless2012/ass/ASSTex;I)V");
+    jclass assFrameClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssFrame");
+    jmethodID assFrameConstructor = (*env)->GetMethodID(env, assFrameClass, "<init>", "([Lio/github/peerless2012/ass/AssTex;I)V");
 
     if (changed == 0) {
         jobject res = (*env)->NewObject(env, assFrameClass, assFrameConstructor, NULL, changed);
@@ -276,7 +276,7 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
     }
 
     int size = count_ass_images(image);
-    jclass assTexClass = (*env)->FindClass(env, "io/github/peerless2012/ass/ASSTex");
+    jclass assTexClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssTex");
     jmethodID assTexConstructor = (*env)->GetMethodID(env, assTexClass, "<init>", "(IILandroid/graphics/Bitmap;I)V");
 
     jobjectArray assTexArr = (*env)->NewObjectArray(env, size, assTexClass, NULL);
@@ -309,7 +309,7 @@ static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderSetFontScale", "(JF)V", (void*)nativeAssRenderSetFontScale},
         {"nativeAssRenderSetStorageSize", "(JII)V", (void*) nativeAssRenderSetStorageSize},
         {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
-        {"nativeAssRenderFrame", "(JJJZ)Lio/github/peerless2012/ass/ASSFrame;", (void*) nativeAssRenderFrame},
+        {"nativeAssRenderFrame", "(JJJZ)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
         {"nativeAssRenderDeinit", "(J)V", (void*)nativeAssRenderDeinit},
 };
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -328,7 +328,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
         return -1;
     }
 
-    clazz = (*env)->FindClass(env, "io/github/peerless2012/ass/ASSTrack");
+    clazz = (*env)->FindClass(env, "io/github/peerless2012/ass/AssTrack");
     if (clazz == NULL) {
         return -1;
     }
@@ -337,7 +337,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
         return -1;
     }
 
-    clazz = (*env)->FindClass(env, "io/github/peerless2012/ass/ASSRender");
+    clazz = (*env)->FindClass(env, "io/github/peerless2012/ass/AssRender");
     if (clazz == NULL) {
         return -1;
     }

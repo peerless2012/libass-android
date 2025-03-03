@@ -8,12 +8,12 @@ import android.graphics.PorterDuffXfermode
 import androidx.annotation.OptIn
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
-import io.github.peerless2012.ass.ASSFrame
-import io.github.peerless2012.ass.ASSRender
+import io.github.peerless2012.ass.AssFrame
+import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.media.executor.AssExecutor
 
 @OptIn(UnstableApi::class)
-class AssCanvasOverlay(private val render: ASSRender) : CanvasOverlay(true) {
+class AssCanvasOverlay(private val render: AssRender) : CanvasOverlay(true) {
 
     private val paint = Paint().apply {
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
@@ -30,7 +30,7 @@ class AssCanvasOverlay(private val render: ASSRender) : CanvasOverlay(true) {
     }
 
     override fun onDraw(canvas: Canvas, presentationTimeUs: Long) {
-        val assFrame: ASSFrame? = executor.renderFrame(presentationTimeUs)
+        val assFrame: AssFrame? = executor.renderFrame(presentationTimeUs)
 
         if (assFrame != null && assFrame.changed == 0) {
             return

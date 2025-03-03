@@ -15,9 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
@@ -32,7 +30,7 @@ class MainActivity : AppCompatActivity() {
 
     private var subtitle = "http://192.168.0.16:8080/files/f.ass"
 
-    private lateinit var player:ExoPlayer
+    private lateinit var player: ExoPlayer
 
     private lateinit var playerView: PlayerView
 
@@ -52,9 +50,8 @@ class MainActivity : AppCompatActivity() {
 
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
-                dataSourceFactory = DefaultDataSource.Factory(this),
-                extractorsFactory = DefaultExtractorsFactory(),
-                renderType = AssRenderType.CANVAS
+                this,
+                AssRenderType.OPEN_GL
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player
