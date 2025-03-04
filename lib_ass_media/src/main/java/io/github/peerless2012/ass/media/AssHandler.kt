@@ -106,12 +106,10 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         }
 
         val track = availableTracks.firstNotNullOfOrNull {
-            val match = if (selectedAssTrack.roleFlags and ROLE_FLAG_EXTERNAL_SUBTITLES != 0) {
-                selectedAssTrack.id!!.endsWith(it.key)
-            } else {
-                it.key == selectedAssTrack.id
-            }
-            if (match) {
+            // When media without external subtitles, format id will not change.
+            // When media with external subtitles, format will become like 1:1 .
+            // So to compat both situation, we just use endsWith.
+            if (selectedAssTrack.id!!.endsWith(it.key)) {
                 it.value
             } else {
                 null
