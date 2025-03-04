@@ -96,8 +96,8 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             setVideoSize(selectedVideoTrack.width, selectedVideoTrack.height)
         }
 
-        val selectedAssTrackId = getSelectedAssTrackId(tracks)
-        if (selectedAssTrackId == null) {
+        val selectedAssTrack = getSelectedAssTrack(tracks)
+        if (selectedAssTrack == null) {
             Log.i("AssHandler", "subtitle track disabled")
             track = null
             render?.setTrack(null)
@@ -105,10 +105,21 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             return
         }
 
-        val track = availableTracks[selectedAssTrackId] ?: return
-        if (this.track == track) return
+        val track = availableTracks.firstNotNullOfOrNull {
+            val match = if (selectedAssTrack.roleFlags and ROLE_FLAG_EXTERNAL_SUBTITLES != 0) {
+                selectedAssTrack.id!!.endsWith(it.key)
+            } else {
+                it.key == selectedAssTrack.id
+            }
+            if (match) {
+                it.value
+            } else {
+                null
+            }
+        }
+        if (track == null || this.track == track) return
 
-        Log.i("AssHandler", "subtitle track changed to $selectedAssTrackId")
+        Log.i("AssHandler", "subtitle track changed to $selectedAssTrack")
         this.track = track
         val render = requireNotNull(render)
         render.setStorageSize(videoSize.width, videoSize.height)
@@ -178,17 +189,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             val header = AssHeaderParser.parse(format, renderType != AssRenderType.LEGACY)
             track.readBuffer(header)
         }
-        if (format.roleFlags and ROLE_FLAG_EXTERNAL_SUBTITLES > 0) {
-            if (format.id!!.contains(":")) {
-                availableTracks[format.id!!] = track
-            } else {
-                // Hack
-                // TODO Find a better way
-                availableTracks["1:" + format.id!!] = track
-            }
-        } else {
-            availableTracks[format.id!!] = track
-        }
+        availableTracks[format.id!!] = track
 
         return track
     }
@@ -244,7 +245,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      * @param tracks The selected tracks.
      * @return The ID of the selected ASS track, or null if none.
      */
-    private fun getSelectedAssTrackId(tracks: Tracks): String? {
+    private fun getSelectedAssTrack(tracks: Tracks): Format? {
         return tracks.groups.find { group ->
             if (group.isSelected) {
                 (0 until group.length).any { index ->
@@ -254,7 +255,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             } else {
                 false
             }
-        }?.getTrackFormat(0)?.id
+        }?.getTrackFormat(0)
     }
 
     /**
