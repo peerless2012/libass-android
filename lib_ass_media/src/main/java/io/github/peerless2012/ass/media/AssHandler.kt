@@ -6,7 +6,6 @@ import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.MimeTypes.TEXT_SSA
-import androidx.media3.common.Player
 import androidx.media3.common.Player.Listener
 import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
@@ -16,7 +15,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.AssTrack
 import io.github.peerless2012.ass.Ass
-import io.github.peerless2012.ass.media.common.ROLE_FLAG_EXTERNAL_SUBTITLES
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssOverlayManager
 import io.github.peerless2012.ass.media.type.AssRenderType
@@ -59,6 +57,9 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     /** The overlay manager for toggling the effects renderer. */
     private var overlayManager: AssOverlayManager? = null
 
+    /** The current selected ass format. */
+    private var format: Format? = null
+
     /**
      * Initializes the handler with the provided ExoPlayer instance.
      * @param player The ExoPlayer instance to attach to.
@@ -91,13 +92,14 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      */
     override fun onTracksChanged(tracks: Tracks) {
         Log.i("AssHandler", "onTracksChanged $tracks")
+
         val selectedVideoTrack = getSelectedVideoTrack(tracks)
         if (selectedVideoTrack != null) {
             setVideoSize(selectedVideoTrack.width, selectedVideoTrack.height)
         }
 
-        val selectedAssTrack = getSelectedAssTrack(tracks)
-        if (selectedAssTrack == null) {
+        format = getSelectedAssTrack(tracks)
+        if (format == null) {
             Log.i("AssHandler", "subtitle track disabled")
             track = null
             render?.setTrack(null)
@@ -105,11 +107,15 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             return
         }
 
+        updateTrack()
+    }
+
+    private fun updateTrack() {
         val track = availableTracks.firstNotNullOfOrNull {
             // When media without external subtitles, format id will not change.
             // When media with external subtitles, format will become like 1:1 .
             // So to compat both situation, we just use endsWith.
-            if (selectedAssTrack.id!!.endsWith(it.key)) {
+            if (format?.id?.endsWith(it.key) == true) {
                 it.value
             } else {
                 null
@@ -117,10 +123,11 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         }
         if (track == null || this.track == track) return
 
-        Log.i("AssHandler", "subtitle track changed to $selectedAssTrack")
+        Log.i("AssHandler", "subtitle track changed to $format")
         this.track = track
         val render = requireNotNull(render)
         render.setStorageSize(videoSize.width, videoSize.height)
+        render.setFrameSize(surfaceSize.width, surfaceSize.height)
         render.setTrack(track)
         overlayManager?.enable(render)
     }
@@ -178,7 +185,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      * @return The created ASS track.
      */
     fun createTrack(format: Format): AssTrack {
-        Log.i("AssHandler", "createTrack: format = $format")
+        Log.i("AssHandler", "createTrack: format = $format, id = ${Thread.currentThread().name}")
         // Ensure the renderer is created before creating tracks.
         createRenderIfNeeded()
 
@@ -188,6 +195,8 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             track.readBuffer(header)
         }
         availableTracks[format.id!!] = track
+
+        updateTrack()
 
         return track
     }

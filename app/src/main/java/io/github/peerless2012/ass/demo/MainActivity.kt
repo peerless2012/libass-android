@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
                 this,
-                AssRenderType.OPEN_GL
+                AssRenderType.LEGACY
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player
