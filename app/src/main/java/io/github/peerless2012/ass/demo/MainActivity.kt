@@ -20,15 +20,14 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.common.collect.ImmutableList
-import io.github.peerless2012.ass.media.common.ROLE_FLAG_EXTERNAL_SUBTITLES
 import io.github.peerless2012.ass.media.kt.buildWithAssSupport
 import io.github.peerless2012.ass.media.type.AssRenderType
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.16:8080/files/f.mp4"
+    private var url = "http://192.168.0.19:8080/files/f.mp4"
 
-    private var subtitle = "http://192.168.0.16:8080/files/f.ass"
+    private var subtitle = "http://192.168.0.19:8080/files/f.ass"
 
     private lateinit var player: ExoPlayer
 
@@ -62,7 +61,6 @@ class MainActivity : AppCompatActivity() {
             .setLabel("External ass")
             .setId("100")
             .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
-            .setRoleFlags(ROLE_FLAG_EXTERNAL_SUBTITLES)
             .build()
         val mediaItem = MediaItem.Builder()
             .setUri(url)

@@ -206,6 +206,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      */
     private fun createRenderIfNeeded() {
         if (render != null) return
+        Log.i("AssHandler", "createRender")
         render = ass.createRender().also { render ->
             if (videoSize.isValid) {
                 render.setStorageSize(videoSize.width, videoSize.height)
@@ -228,6 +229,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         offset: Int = 0,
         length: Int = data.size
     ) {
+        Log.i("AssHandler", "readTrackDialogue id = $trackId")
         availableTracks[trackId]?.readChunk(start, duration, data, offset, length)
     }
 

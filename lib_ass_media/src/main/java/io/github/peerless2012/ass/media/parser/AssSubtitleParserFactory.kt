@@ -6,7 +6,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.text.DefaultSubtitleParserFactory
 import androidx.media3.extractor.text.SubtitleParser
 import io.github.peerless2012.ass.media.AssHandler
-import io.github.peerless2012.ass.media.common.ROLE_FLAG_EXTERNAL_SUBTITLES
 import io.github.peerless2012.ass.media.type.AssRenderType
 
 /**
@@ -31,16 +30,17 @@ class AssSubtitleParserFactory(private val assHandler: AssHandler): SubtitlePars
 
     override fun create(format: Format): SubtitleParser {
         return if (format.sampleMimeType == MimeTypes.TEXT_SSA) {
-            val externalSubtitles = (format.roleFlags and ROLE_FLAG_EXTERNAL_SUBTITLES) > 0
+            val embeddedSubtitles = MimeTypes.VIDEO_MATROSKA
+                .contentEquals(format.containerMimeType)
             val track = assHandler.createTrack(format)
-            if (externalSubtitles) {
-                AssFullSubtitleParser(assHandler, track)
-            } else {
+            if (embeddedSubtitles) {
                 if (assHandler.renderType != AssRenderType.LEGACY) {
                     AssNoOpSubtitleParser()
                 } else {
                     AssSegmentSubtitleParser(assHandler, track)
                 }
+            } else {
+                AssFullSubtitleParser(assHandler, track)
             }
         } else {
             defaultSubtitleParserFactory.create(format)
