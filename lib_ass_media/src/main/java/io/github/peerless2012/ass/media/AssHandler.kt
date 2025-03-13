@@ -1,5 +1,6 @@
 package io.github.peerless2012.ass.media
 
+import android.os.Handler
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.Format
@@ -45,14 +46,12 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     private val availableTracks = mutableMapOf<String, AssTrack>()
 
     /** The size of the video track. */
-    private var videoSize = Size.ZERO
+    var videoSize = Size.ZERO
+        private set
 
     /** The size of the surface on which subtitles are rendered. */
     var surfaceSize = Size.ZERO
         private set
-
-    /** Callback for listening to surface size changes. */
-    private var surfaceSizeCallback: ((Size) -> Unit)? = null
 
     /** The overlay manager for toggling the effects renderer. */
     private var overlayManager: AssOverlayManager? = null
@@ -60,12 +59,16 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     /** The current selected ass format. */
     private var format: Format? = null
 
+    /** The playback control thread handler. */
+    private lateinit var handler: Handler
+
     /**
      * Initializes the handler with the provided ExoPlayer instance.
      * @param player The ExoPlayer instance to attach to.
      */
     fun init(player: ExoPlayer) {
         player.addListener(this)
+        handler = Handler(player.applicationLooper)
         if (renderType != AssRenderType.LEGACY) {
             overlayManager = AssOverlayManager(player, renderType == AssRenderType.OPEN_GL)
         }
@@ -127,9 +130,13 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         this.track = track
         val render = requireNotNull(render)
         render.setStorageSize(videoSize.width, videoSize.height)
-        render.setFrameSize(surfaceSize.width, surfaceSize.height)
+        render.setFrameSize(videoSize.width, videoSize.height)
         render.setTrack(track)
-        overlayManager?.enable(render)
+
+        // Player func call need in create thread.
+        overlayManager?.let {
+            handler.post { it.enable(render) }
+        }
     }
 
     /**
@@ -143,15 +150,6 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         Log.i("AssHandler", "onSurfaceSizeChanged: width = $width, height = $height")
         if (surfaceSize.width == width && surfaceSize.height == height) return
         surfaceSize = Size(width, height)
-        surfaceSizeCallback?.invoke(surfaceSize)
-    }
-
-    /**
-     * Sets a callback to handle changes to the surface size.
-     * @param callback The callback function to invoke when the surface size changes.
-     */
-    fun onSurfaceSizeChanged(callback: (Size) -> Unit) {
-        this.surfaceSizeCallback = callback
     }
 
     override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -184,8 +182,9 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      * @param format The format of the ASS track.
      * @return The created ASS track.
      */
+    @Synchronized
     fun createTrack(format: Format): AssTrack {
-        Log.i("AssHandler", "createTrack: format = $format, id = ${Thread.currentThread().name}")
+        Log.i("AssHandler", "createTrack: format = $format")
         // Ensure the renderer is created before creating tracks.
         createRenderIfNeeded()
 
@@ -211,8 +210,8 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             if (videoSize.isValid) {
                 render.setStorageSize(videoSize.width, videoSize.height)
             }
-            if (surfaceSize.isValid) {
-                render.setFrameSize(surfaceSize.width, surfaceSize.height)
+            if (videoSize.isValid) {
+                render.setFrameSize(videoSize.width, videoSize.height)
             }
         }
     }
@@ -229,7 +228,6 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         offset: Int = 0,
         length: Int = data.size
     ) {
-        Log.i("AssHandler", "readTrackDialogue id = $trackId")
         availableTracks[trackId]?.readChunk(start, duration, data, offset, length)
     }
 

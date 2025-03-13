@@ -1,6 +1,5 @@
 package io.github.peerless2012.ass.demo
 
-import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
@@ -27,13 +26,10 @@ class MainActivity : AppCompatActivity() {
 
     private var url = "http://192.168.0.19:8080/files/f.mp4"
 
-    private var subtitle = "http://192.168.0.19:8080/files/f.ass"
-
     private lateinit var player: ExoPlayer
 
     private lateinit var playerView: PlayerView
 
-    @SuppressLint("WrongConstant")
     @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -50,21 +46,35 @@ class MainActivity : AppCompatActivity() {
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
                 this,
-                AssRenderType.LEGACY
+                AssRenderType.CANVAS
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player
-        val config = MediaItem.SubtitleConfiguration
-            .Builder(Uri.parse(subtitle))
+        val enConfig = MediaItem.SubtitleConfiguration
+            .Builder(Uri.parse("http://192.168.0.19:8080/files/f-en.ass"))
             .setMimeType("text/x-ssa")
             .setLanguage("en")
-            .setLabel("External ass")
+            .setLabel("External ass en")
             .setId("100")
             .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
             .build()
+        val jpConfig = MediaItem.SubtitleConfiguration
+            .Builder(Uri.parse("http://192.168.0.19:8080/files/f-jp.ass"))
+            .setMimeType("text/x-ssa")
+            .setLanguage("jp")
+            .setLabel("External ass jp")
+            .setId("101")
+            .build()
+        val zhConfig = MediaItem.SubtitleConfiguration
+            .Builder(Uri.parse("http://192.168.0.19:8080/files/f-zh.ass"))
+            .setMimeType("text/x-ssa")
+            .setLanguage("zh")
+            .setLabel("External ass zh")
+            .setId("102")
+            .build()
         val mediaItem = MediaItem.Builder()
             .setUri(url)
-            .setSubtitleConfigurations(ImmutableList.of(config))
+            .setSubtitleConfigurations(ImmutableList.of(enConfig, jpConfig, zhConfig))
         player.setMediaItem(mediaItem.build())
         player.prepare()
     }
@@ -77,8 +87,8 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.menu_url-> switchUrl()
-            R.id.menu_audio -> selectTrack(androidx.media3.common.C.TRACK_TYPE_AUDIO)
-            R.id.menu_sub -> selectTrack(androidx.media3.common.C.TRACK_TYPE_TEXT)
+            R.id.menu_audio -> selectTrack(C.TRACK_TYPE_AUDIO)
+            R.id.menu_sub -> selectTrack(C.TRACK_TYPE_TEXT)
         }
         return super.onOptionsItemSelected(item)
     }
