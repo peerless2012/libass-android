@@ -16,7 +16,7 @@ App want to use libass in java/kotlin can use this module.
     ```
    implementation "io.github.peerless2012:ass-kt:x.x.x"
     ```
-3. Use libass in java/kotlin
+3. Use libass-kt in java/kotlin
     ```
     val ass = ASS()
     ```

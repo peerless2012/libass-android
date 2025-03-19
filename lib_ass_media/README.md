@@ -5,7 +5,7 @@ App use media3 can use this module to add ass for your player.
 
 ## Feature
 There are three ways to render ass subtitle.
-Which is defined in `ASSRenderType`.
+Which is defined in `AssRenderType`.
 
 ```
 /**
@@ -63,7 +63,7 @@ Due to test, the `OPEN_GL` will save 1/3 time when render.
     ```
    implementation "io.github.peerless2012:ass-media:x.x.x"
     ```
-3. Use libass in java/kotlin
+3. Use libass-media in java/kotlin
     ```
     layer = ExoPlayer.Builder(this)
     .buildWithAssSupport(
@@ -71,6 +71,35 @@ Due to test, the `OPEN_GL` will save 1/3 time when render.
         AssRenderType.OPEN_GL
     )
     ```
+4. Add external subtitles.
+   ```
+   val enConfig = MediaItem.SubtitleConfiguration
+         .Builder(Uri.parse("http://192.168.0.254:80/files/f-en.ass"))
+         .setMimeType(MimeTypes.TEXT_SSA)
+         .setLanguage("en")
+         .setLabel("External ass en")
+         .setId("129")
+         .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+         .build()
+   val jpConfig = MediaItem.SubtitleConfiguration
+         .Builder(Uri.parse("http://192.168.0.254:80/files/f-jp.ass"))
+         .setMimeType(MimeTypes.TEXT_SSA)
+         .setLanguage("jp")
+         .setLabel("External ass jp")
+         .setId("130")
+         .build()
+   val zhConfig = MediaItem.SubtitleConfiguration
+         .Builder(Uri.parse("http://192.168.0.254:80/files/f-zh.ass"))
+         .setMimeType(MimeTypes.TEXT_SSA)
+         .setLanguage("zh")
+         .setLabel("External ass zh")
+         .setId("131")
+         .build()
+   val mediaItem = MediaItem.Builder()
+         .setUri(url)
+         .setSubtitleConfigurations(ImmutableList.of(enConfig, jpConfig, zhConfig))
+   ```
+   Note: Make sure the `id` is set and different from media self track size. Recommend bigger than 128 or more bigger.
 
 ## Known Issue
 ### 1. Ass render has a wrong order when ass use layer param.
@@ -90,7 +119,7 @@ This solution have two feature:
 * less cpu use, because we do not need to blend color on cpu side.
 * less memory use, because ALPHA_8 can save 3/4 memory from ARGB_8888
 
-This roadmap has been blocked by folowing issues:
+This roadmap has been blocked by following issues:
 * [Cue encode error when use bitmap and config is ALPHA_8.](https://github.com/androidx/media/issues/2054)
 * [Support bitmap color blend when render cue.](https://github.com/androidx/media/issues/2055)
 

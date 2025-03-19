@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
@@ -24,7 +25,7 @@ import io.github.peerless2012.ass.media.type.AssRenderType
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.19:8080/files/f.mp4"
+    private var url = "http://192.168.0.254:80/files/f.mp4"
 
     private lateinit var player: ExoPlayer
 
@@ -51,26 +52,26 @@ class MainActivity : AppCompatActivity() {
         playerView = findViewById(R.id.main_player)
         playerView.player = player
         val enConfig = MediaItem.SubtitleConfiguration
-            .Builder(Uri.parse("http://192.168.0.19:8080/files/f-en.ass"))
-            .setMimeType("text/x-ssa")
+            .Builder(Uri.parse("http://192.168.0.254:80/files/f-en.ass"))
+            .setMimeType(MimeTypes.TEXT_SSA)
             .setLanguage("en")
             .setLabel("External ass en")
-            .setId("100")
+            .setId("129")
             .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
             .build()
         val jpConfig = MediaItem.SubtitleConfiguration
-            .Builder(Uri.parse("http://192.168.0.19:8080/files/f-jp.ass"))
-            .setMimeType("text/x-ssa")
+            .Builder(Uri.parse("http://192.168.0.254:80/files/f-jp.ass"))
+            .setMimeType(MimeTypes.TEXT_SSA)
             .setLanguage("jp")
             .setLabel("External ass jp")
-            .setId("101")
+            .setId("130")
             .build()
         val zhConfig = MediaItem.SubtitleConfiguration
-            .Builder(Uri.parse("http://192.168.0.19:8080/files/f-zh.ass"))
-            .setMimeType("text/x-ssa")
+            .Builder(Uri.parse("http://192.168.0.254:80/files/f-zh.ass"))
+            .setMimeType(MimeTypes.TEXT_SSA)
             .setLanguage("zh")
             .setLabel("External ass zh")
-            .setId("102")
+            .setId("121")
             .build()
         val mediaItem = MediaItem.Builder()
             .setUri(url)
