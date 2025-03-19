@@ -99,28 +99,10 @@ Due to test, the `OPEN_GL` will save 1/3 time when render.
          .setUri(url)
          .setSubtitleConfigurations(ImmutableList.of(enConfig, jpConfig, zhConfig))
    ```
-   Note: Make sure the `id` is set and different from media self track size. Recommend bigger than 128 or more bigger.
+   NOTE: Make sure the `id` is set and different from media self track size. Recommend bigger than 128 or more bigger.
 
 ## Known Issue
 ### 1. Ass render has a wrong order when ass use layer param.
 This only happens in `LEGACY` mode, see:
 * [ASS render in a wrong order](https://github.com/androidx/media/issues/2124)
 * [Fix cue render order for ass/ssa](https://github.com/androidx/media/pull/2137)
-
-### 2. External ass subtitles will fallback to default ass render.
-This will happens in all mode.
-
-## Note
-The libass will render a event to a bitmap with only alpha channel. Current we blend color and alpha to an ARGB bitmap.
-
-But, I think this is not good enough, we can just copy the alpha data to a ALPHA_8 bitmap, blend color when we draw the bitmap.
-
-This solution have two feature:
-* less cpu use, because we do not need to blend color on cpu side.
-* less memory use, because ALPHA_8 can save 3/4 memory from ARGB_8888
-
-This roadmap has been blocked by following issues:
-* [Cue encode error when use bitmap and config is ALPHA_8.](https://github.com/androidx/media/issues/2054)
-* [Support bitmap color blend when render cue.](https://github.com/androidx/media/issues/2055)
-
-And google seems will not accept this feature request.
