@@ -9,7 +9,7 @@ appcompat = "1.7.0"
 material = "1.12.0"
 activity = "1.8.0"
 constraintlayout = "2.2.0"
-media3 = "1.5.1"
+media3 = "1.6.0"
 publish = "0.30.0"
 
 [libraries]
@@ -23,8 +23,6 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-media3-exo = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3"}
 androidx-media3-effect = { group = "androidx.media3", name = "media3-effect", version.ref = "media3"}
-androidx-media3-cronet = { group = "androidx.media3", name = "media3-datasource-cronet", version.ref = "media3"}
-androidx-media3-okhttp = { group = "androidx.media3", name = "media3-datasource-okhttp", version.ref = "media3"}
 androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3"}
 
 [plugins]

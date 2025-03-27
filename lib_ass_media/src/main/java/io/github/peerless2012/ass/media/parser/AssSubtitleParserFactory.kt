@@ -2,9 +2,7 @@ package io.github.peerless2012.ass.media.parser
 
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
-import androidx.media3.common.util.Consumer
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.DefaultSubtitleParserFactory
 import androidx.media3.extractor.text.SubtitleParser
 import io.github.peerless2012.ass.media.AssHandler
@@ -32,30 +30,21 @@ class AssSubtitleParserFactory(private val assHandler: AssHandler): SubtitlePars
 
     override fun create(format: Format): SubtitleParser {
         return if (format.sampleMimeType == MimeTypes.TEXT_SSA) {
+            val embeddedSubtitles = MimeTypes.VIDEO_MATROSKA
+                .contentEquals(format.containerMimeType)
             val track = assHandler.createTrack(format)
-            if (assHandler.renderType != AssRenderType.LEGACY) {
-                // The effects renderer calls libass directly, so we want to ignore parse events
-                NoOpSubtitleParser()
+            if (embeddedSubtitles) {
+                if (assHandler.renderType != AssRenderType.LEGACY) {
+                    AssNoOpSubtitleParser()
+                } else {
+                    AssSegmentSubtitleParser(assHandler, track)
+                }
             } else {
-                AssSubtitleParser(assHandler, track)
+                AssFullSubtitleParser(assHandler, track)
             }
         } else {
             defaultSubtitleParserFactory.create(format)
         }
     }
 
-    private class NoOpSubtitleParser : SubtitleParser {
-        override fun parse(
-            data: ByteArray,
-            offset: Int,
-            length: Int,
-            outputOptions: SubtitleParser.OutputOptions,
-            output: Consumer<CuesWithTiming>
-        ) {
-        }
-
-        override fun getCueReplacementBehavior(): Int {
-            return Format.CUE_REPLACEMENT_BEHAVIOR_REPLACE
-        }
-    }
 }

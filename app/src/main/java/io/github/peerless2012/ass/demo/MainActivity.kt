@@ -1,5 +1,6 @@
 package io.github.peerless2012.ass.demo
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -10,18 +11,21 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.common.collect.ImmutableList
 import io.github.peerless2012.ass.media.kt.buildWithAssSupport
 import io.github.peerless2012.ass.media.type.AssRenderType
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.16:8080/files/k.mkv"
+    private var url = "http://192.168.0.254:80/files/f.mp4"
 
     private lateinit var player: ExoPlayer
 
@@ -43,11 +47,36 @@ class MainActivity : AppCompatActivity() {
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
                 this,
-                AssRenderType.OPEN_GL
+                AssRenderType.CANVAS
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player
-        player.setMediaItem(MediaItem.fromUri(url))
+        val enConfig = MediaItem.SubtitleConfiguration
+            .Builder(Uri.parse("http://192.168.0.254:80/files/f-en.ass"))
+            .setMimeType(MimeTypes.TEXT_SSA)
+            .setLanguage("en")
+            .setLabel("External ass en")
+            .setId("129")
+            .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+            .build()
+        val jpConfig = MediaItem.SubtitleConfiguration
+            .Builder(Uri.parse("http://192.168.0.254:80/files/f-jp.ass"))
+            .setMimeType(MimeTypes.TEXT_SSA)
+            .setLanguage("jp")
+            .setLabel("External ass jp")
+            .setId("130")
+            .build()
+        val zhConfig = MediaItem.SubtitleConfiguration
+            .Builder(Uri.parse("http://192.168.0.254:80/files/f-zh.ass"))
+            .setMimeType(MimeTypes.TEXT_SSA)
+            .setLanguage("zh")
+            .setLabel("External ass zh")
+            .setId("121")
+            .build()
+        val mediaItem = MediaItem.Builder()
+            .setUri(url)
+            .setSubtitleConfigurations(ImmutableList.of(enConfig, jpConfig, zhConfig))
+        player.setMediaItem(mediaItem.build())
         player.prepare()
     }
 
@@ -59,8 +88,8 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.menu_url-> switchUrl()
-            R.id.menu_audio -> selectTrack(androidx.media3.common.C.TRACK_TYPE_AUDIO)
-            R.id.menu_sub -> selectTrack(androidx.media3.common.C.TRACK_TYPE_TEXT)
+            R.id.menu_audio -> selectTrack(C.TRACK_TYPE_AUDIO)
+            R.id.menu_sub -> selectTrack(C.TRACK_TYPE_TEXT)
         }
         return super.onOptionsItemSelected(item)
     }

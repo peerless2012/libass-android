@@ -1,12 +1,15 @@
 package io.github.peerless2012.ass.media
 
+import android.os.Handler
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.MimeTypes.TEXT_SSA
 import androidx.media3.common.Player.Listener
 import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -43,17 +46,21 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     private val availableTracks = mutableMapOf<String, AssTrack>()
 
     /** The size of the video track. */
-    private var videoSize = Size(0, 0)
-
-    /** The size of the surface on which subtitles are rendered. */
-    var surfaceSize = Size(0, 0)
+    var videoSize = Size.ZERO
         private set
 
-    /** Callback for listening to surface size changes. */
-    private var surfaceSizeCallback: ((Size) -> Unit)? = null
+    /** The size of the surface on which subtitles are rendered. */
+    var surfaceSize = Size.ZERO
+        private set
 
     /** The overlay manager for toggling the effects renderer. */
     private var overlayManager: AssOverlayManager? = null
+
+    /** The current selected ass format. */
+    private var format: Format? = null
+
+    /** The playback control thread handler. */
+    private lateinit var handler: Handler
 
     /**
      * Initializes the handler with the provided ExoPlayer instance.
@@ -61,6 +68,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      */
     fun init(player: ExoPlayer) {
         player.addListener(this)
+        handler = Handler(player.applicationLooper)
         if (renderType != AssRenderType.LEGACY) {
             overlayManager = AssOverlayManager(player, renderType == AssRenderType.OPEN_GL)
         }
@@ -72,10 +80,11 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      */
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         super.onMediaItemTransition(mediaItem, reason)
+        Log.i("AssHandler", "onMediaItemTransition: item = ${mediaItem}, reason = $reason")
         render = null
         track = null
         availableTracks.clear()
-        videoSize = Size(0, 0)
+        videoSize = Size.ZERO
         overlayManager?.disable()
     }
 
@@ -85,8 +94,15 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      * @param tracks The selected tracks.
      */
     override fun onTracksChanged(tracks: Tracks) {
-        val selectedAssTrackId = getSelectedAssTrackId(tracks)
-        if (selectedAssTrackId == null) {
+        Log.i("AssHandler", "onTracksChanged $tracks")
+
+        val selectedVideoTrack = getSelectedVideoTrack(tracks)
+        if (selectedVideoTrack != null) {
+            setVideoSize(selectedVideoTrack.width, selectedVideoTrack.height)
+        }
+
+        format = getSelectedAssTrack(tracks)
+        if (format == null) {
             Log.i("AssHandler", "subtitle track disabled")
             track = null
             render?.setTrack(null)
@@ -94,14 +110,33 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             return
         }
 
-        val track = availableTracks[selectedAssTrackId] ?: return
-        if (this.track == track) return
+        updateTrack()
+    }
 
-        Log.i("AssHandler", "subtitle track changed to $selectedAssTrackId")
+    private fun updateTrack() {
+        val track = availableTracks.firstNotNullOfOrNull {
+            // When media without external subtitles, format id will not change.
+            // When media with external subtitles, format will become like 1:1 .
+            // So to compat both situation, we just use endsWith.
+            if (format?.id?.endsWith(it.key) == true) {
+                it.value
+            } else {
+                null
+            }
+        }
+        if (track == null || this.track == track) return
+
+        Log.i("AssHandler", "subtitle track changed to $format")
         this.track = track
         val render = requireNotNull(render)
+        render.setStorageSize(videoSize.width, videoSize.height)
+        render.setFrameSize(videoSize.width, videoSize.height)
         render.setTrack(track)
-        overlayManager?.enable(render)
+
+        // Player func call need in create thread.
+        overlayManager?.let {
+            handler.post { it.enable(render) }
+        }
     }
 
     /**
@@ -115,15 +150,12 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         Log.i("AssHandler", "onSurfaceSizeChanged: width = $width, height = $height")
         if (surfaceSize.width == width && surfaceSize.height == height) return
         surfaceSize = Size(width, height)
-        surfaceSizeCallback?.invoke(surfaceSize)
     }
 
-    /**
-     * Sets a callback to handle changes to the surface size.
-     * @param callback The callback function to invoke when the surface size changes.
-     */
-    fun onSurfaceSizeChanged(callback: (Size) -> Unit) {
-        this.surfaceSizeCallback = callback
+    override fun onVideoSizeChanged(videoSize: VideoSize) {
+        super.onVideoSizeChanged(videoSize)
+        this.videoSize = Size(videoSize.width, videoSize.height)
+        Log.i("AssHandler", "onVideoSizeChanged: width = ${videoSize.width}, height = ${videoSize.height}")
     }
 
     /**
@@ -133,6 +165,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      * @param height The height of the video.
      */
     fun setVideoSize(width: Int, height: Int) {
+        Log.i("AssHandler", "setVideoSize: width = $width, height = $height")
         videoSize = Size(width, height)
     }
 
@@ -149,14 +182,21 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      * @param format The format of the ASS track.
      * @return The created ASS track.
      */
+    @Synchronized
     fun createTrack(format: Format): AssTrack {
+        Log.i("AssHandler", "createTrack: format = $format")
         // Ensure the renderer is created before creating tracks.
         createRenderIfNeeded()
 
         val track = ass.createTrack()
-        val header = AssHeaderParser.parse(format, renderType != AssRenderType.LEGACY)
-        track.readBuffer(header)
+        if (format.initializationData.size > 0) {
+            val header = AssHeaderParser.parse(format, renderType != AssRenderType.LEGACY)
+            track.readBuffer(header)
+        }
         availableTracks[format.id!!] = track
+
+        updateTrack()
+
         return track
     }
 
@@ -165,18 +205,20 @@ class AssHandler(val renderType: AssRenderType) : Listener {
      */
     private fun createRenderIfNeeded() {
         if (render != null) return
+        Log.i("AssHandler", "createRender")
         render = ass.createRender().also { render ->
             if (videoSize.isValid) {
                 render.setStorageSize(videoSize.width, videoSize.height)
             }
-            if (surfaceSize.isValid) {
-                render.setFrameSize(surfaceSize.width, surfaceSize.height)
+            if (videoSize.isValid) {
+                render.setFrameSize(videoSize.width, videoSize.height)
             }
         }
     }
 
     /**
      * Reads a dialogue into the track of the given [trackId].
+     * TODO This should move to executor.
      */
     fun readTrackDialogue(
         trackId: String?,
@@ -190,11 +232,27 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     }
 
     /**
+     * Retrieves the selected video track, if any.
+     */
+    private fun getSelectedVideoTrack(tracks: Tracks): Format? {
+        return tracks.groups.find { group ->
+            if (group.isSelected) {
+                (0 until group.length).any { index ->
+                    val track = group.getTrackFormat(index)
+                    MimeTypes.isVideo(track.sampleMimeType)
+                }
+            } else {
+                false
+            }
+        }?.getTrackFormat(0)
+    }
+
+    /**
      * Retrieves the ID of the selected ASS track, if any.
      * @param tracks The selected tracks.
      * @return The ID of the selected ASS track, or null if none.
      */
-    private fun getSelectedAssTrackId(tracks: Tracks): String? {
+    private fun getSelectedAssTrack(tracks: Tracks): Format? {
         return tracks.groups.find { group ->
             if (group.isSelected) {
                 (0 until group.length).any { index ->
@@ -204,7 +262,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             } else {
                 false
             }
-        }?.getTrackFormat(0)?.id
+        }?.getTrackFormat(0)
     }
 
     /**
