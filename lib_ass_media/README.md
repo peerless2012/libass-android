@@ -65,7 +65,7 @@ Due to test, the `OPEN_GL` will save 1/3 time when render.
     ```
 3. Use libass-media in java/kotlin
     ```
-    layer = ExoPlayer.Builder(this)
+    player = ExoPlayer.Builder(this)
     .buildWithAssSupport(
         this,
         AssRenderType.OPEN_GL
