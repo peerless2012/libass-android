@@ -47,9 +47,13 @@ fun ExtractorsFactory.withAssMkvSupport(
     assHandler: AssHandler
 ): ExtractorsFactory {
     return ExtractorsFactory {
-        createExtractors()
-            .filter { it !is MatroskaExtractor }
-            .plus(AssMatroskaExtractor(assSubtitleParserFactory, assHandler))
-            .toTypedArray()
+        val extractors  = createExtractors()
+        extractors.forEachIndexed { index, extractor ->
+            if (extractor is MatroskaExtractor) {
+                // Must keep the extractor order.
+                extractors[index] = AssMatroskaExtractor(assSubtitleParserFactory, assHandler)
+            }
+        }
+        extractors
     }
 }
