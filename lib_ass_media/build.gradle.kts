@@ -37,6 +37,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.annotation)
+    implementation(libs.androidx.annotation.experimental)
     implementation(libs.androidx.media3.exo)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.effect)

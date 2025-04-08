@@ -14,6 +14,9 @@ class AssSegmentSubtitleParser(
     private val timestampPattern = "(\\d+:\\d{2}:\\d{2}):(\\d{2})".toRegex()
 
     override fun onParse(data: ByteArray, offset: Int, length: Int) {
+        // when mkv has multi ass track, this parser will be called for each track.
+        assHandler.render?.setTrack(track)
+
         // Note
         // Exoplayer will trans time from hh:mm:ss.xxx to hh:mm:ss:xxx
         // And lib ass only can parse hh:mm:ss.xxx
