@@ -106,3 +106,7 @@ Due to test, the `OPEN_GL` will save 1/3 time when render.
 This only happens in `LEGACY` mode, see:
 * [ASS render in a wrong order](https://github.com/androidx/media/issues/2124)
 * [Fix cue render order for ass/ssa](https://github.com/androidx/media/pull/2137)
+
+### 2. Ass render subtitle time error when not start at begin.
+This happens in `CANVAS` and `OPEN_GL` mode.
+* [Align subtitle output with video frame timestamps](https://github.com/androidx/media/issues/2289#issuecomment-2831754204)
