@@ -8,6 +8,7 @@ import android.graphics.PorterDuffXfermode
 import androidx.annotation.OptIn
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.effect.CanvasOverlay
 import io.github.peerless2012.ass.AssFrame
 import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.media.executor.AssExecutor
