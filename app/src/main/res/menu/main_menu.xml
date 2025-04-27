@@ -7,4 +7,9 @@
 
     <item android:id="@+id/menu_sub" android:title="Subtitle"/>
 
+    <group android:id="@+id/menu_resize">
+        <item android:id="@+id/menu_resize_fit" android:title="Fit"/>
+        <item android:id="@+id/menu_resize_crop" android:title="Crop"/>
+    </group>
+
 </menu>

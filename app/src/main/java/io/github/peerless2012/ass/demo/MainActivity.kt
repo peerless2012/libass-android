@@ -16,6 +16,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
@@ -47,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
                 this,
-                AssRenderType.CANVAS
+                AssRenderType.LEGACY
             )
         playerView = findViewById(R.id.main_player)
         playerView.player = player
@@ -85,11 +86,14 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    @OptIn(UnstableApi::class)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.menu_url-> switchUrl()
             R.id.menu_audio -> selectTrack(C.TRACK_TYPE_AUDIO)
             R.id.menu_sub -> selectTrack(C.TRACK_TYPE_TEXT)
+            R.id.menu_resize_fit -> playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            R.id.menu_resize_crop -> playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
         }
         return super.onOptionsItemSelected(item)
     }
