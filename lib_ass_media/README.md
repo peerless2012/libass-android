@@ -110,3 +110,7 @@ This only happens in `LEGACY` mode, see:
 ### 2. Ass render subtitle time error when not start at begin.
 This happens in `CANVAS` and `OPEN_GL` mode.
 * [Align subtitle output with video frame timestamps](https://github.com/androidx/media/issues/2289#issuecomment-2831754204)
+
+### 3. ResizeMode not work.
+This happens in `CANVAS` and `OPEN_GL` mode.
+* [onVideoSizeChanged not called when setVideoEffects called.](https://github.com/androidx/media/issues/2284)
