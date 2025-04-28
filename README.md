@@ -1,4 +1,8 @@
 # libass-android
+[![ass - Version](https://img.shields.io/maven-central/v/io.github.peerless2012/ass?label=ass)](https://central.sonatype.com/artifact/io.github.peerless2012/ass)
+[![ass-kt - Version](https://img.shields.io/maven-central/v/io.github.peerless2012/ass-kt?label=ass-kt)](https://central.sonatype.com/artifact/io.github.peerless2012/ass-kt)
+[![ass-media - Version](https://img.shields.io/maven-central/v/io.github.peerless2012/ass-media?label=ass-media)](https://central.sonatype.com/artifact/io.github.peerless2012/ass-media)
+
 A collection of libraries for implementing [libass](https://github.com/libass/libass) for Android.
 
 It use [libass-cmake](https://github.com/peerless2012/libass-cmake) to build libass.
