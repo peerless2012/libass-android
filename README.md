@@ -27,7 +27,7 @@ App use media3 can use this module to add ass for your player.
 | Icon                                      | Name   |
 |------------------------------------------|--------|
 | <img src="https://raw.githubusercontent.com/FongMi/TV/refs/heads/fongmi/other/image/icon.png" alt="影視TV" width="50" /> | [影視TV](https://github.com/FongMi/TV)  |
-| <img src="https://private-user-images.githubusercontent.com/50815957/438631485-e9b4d86b-6ce8-4550-bde2-bdf9a3818644.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDU5MTQwNDYsIm5iZiI6MTc0NTkxMzc0NiwicGF0aCI6Ii81MDgxNTk1Ny80Mzg2MzE0ODUtZTliNGQ4NmItNmNlOC00NTUwLWJkZTItYmRmOWEzODE4NjQ0LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MjklMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDI5VDA4MDIyNlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWEzYjE2MDZiYjkyZGRjNTJmZTVkMTE1YWMyM2MzOWRkNmQ2ZmUwZGJkMDFkODU3NjA5Yzg3NzNmNjVhOGQxMzkmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.ipK_rg9l26nFyu3qUIK1R7YdEe2mG6e3wktNHhyHEsM" alt="AfuseKt" width="50" /> | [AfuseKt](https://github.com/AttemptD/AfuseKt-release)  |
+| <img src="https://github.com/user-attachments/assets/e9b4d86b-6ce8-4550-bde2-bdf9a3818644" alt="AfuseKt" width="50" /> | [AfuseKt](https://github.com/AttemptD/AfuseKt-release)  |
 
 ## Issue
 If you have issue when use, [create](https://github.com/peerless2012/libass-android/issues/new) an issue.
