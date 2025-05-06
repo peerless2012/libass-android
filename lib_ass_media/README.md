@@ -7,29 +7,14 @@ App use media3 can use this module to add ass for your player.
 There are three ways to render ass subtitle.
 Which is defined in `AssRenderType`.
 
-```
-/**
- * ASS render type
- */
-enum class AssRenderType {
+| Type | Feature | Anim | HDR/DV |
+| :----: | :----: | :----: | :----: |
+| LEGACY | SubtitleView & Cue | ❌ | ✅ |
+| CANVAS | Effect | ✅ | ❓ |
+| OPEN_GL | Effect | ✅ | ❓ |
 
-    /**
-     * Use SubtitleView render.
-     */
-    LEGACY,
-
-    /**
-     * Use Effect(Powered by canvas)
-     */
-    CANVAS,
-
-    /**
-     * Use Effect(Powered by OpenGL)
-     */
-    OPEN_GL
-
-}
-```
+* [OverlayShaderProgram does not support HDR colors yet](https://github.com/androidx/media/issues/723)
+* [Why does TextOverLay support hdr, but Bitmap not support?](https://github.com/androidx/media/issues/2383)
 
 ### 1. LEGACY
 The ass/ssa subtitle will be parsed and transcode to bytes, and decode to bitmap when render.
@@ -100,17 +85,3 @@ Due to test, the `OPEN_GL` will save 1/3 time when render.
          .setSubtitleConfigurations(ImmutableList.of(enConfig, jpConfig, zhConfig))
    ```
    NOTE: Make sure the `id` is set and different from media self track size. Recommend bigger than 128 or more bigger.
-
-## Known Issue
-### 1. Ass render has a wrong order when ass use layer param.
-This only happens in `LEGACY` mode, see:
-* [ASS render in a wrong order](https://github.com/androidx/media/issues/2124)
-* [Fix cue render order for ass/ssa](https://github.com/androidx/media/pull/2137)
-
-### 2. Ass render subtitle time error when not start at begin.
-This happens in `CANVAS` and `OPEN_GL` mode.
-* [Align subtitle output with video frame timestamps](https://github.com/androidx/media/issues/2289#issuecomment-2831754204)
-
-### 3. ResizeMode not work.
-This happens in `CANVAS` and `OPEN_GL` mode.
-* [onVideoSizeChanged not called when setVideoEffects called.](https://github.com/androidx/media/issues/2284)
