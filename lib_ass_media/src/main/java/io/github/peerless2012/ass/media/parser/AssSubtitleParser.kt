@@ -50,6 +50,7 @@ abstract class AssSubtitleParser(
             frames?.images?.let { texts ->
                 texts.forEach { tex ->
                     val cue = Cue.Builder()
+                        .setZIndex(event.layer)
                         .setBitmap(tex.bitmap)
                         .setPosition(tex.x / assHandler.videoSize.width.toFloat())
                         .setPositionAnchor(Cue.ANCHOR_TYPE_START)
