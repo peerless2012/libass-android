@@ -11,10 +11,11 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.CanvasOverlay
 import io.github.peerless2012.ass.AssFrame
 import io.github.peerless2012.ass.AssRender
+import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.executor.AssExecutor
 
 @OptIn(UnstableApi::class)
-class AssCanvasOverlay(private val render: AssRender) : CanvasOverlay(true) {
+class AssCanvasOverlay(private val handler: AssHandler, private val render: AssRender) : CanvasOverlay(true) {
 
     private val paint = Paint().apply {
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
@@ -31,7 +32,12 @@ class AssCanvasOverlay(private val render: AssRender) : CanvasOverlay(true) {
     }
 
     override fun onDraw(canvas: Canvas, presentationTimeUs: Long) {
-        val assFrame: AssFrame? = executor.renderFrame(presentationTimeUs)
+        val timeUs = if (handler.videoTime >= 0) {
+            handler.videoTime
+        } else {
+            presentationTimeUs
+        }
+        val assFrame: AssFrame? = executor.renderFrame(timeUs)
 
         if (assFrame != null && assFrame.changed == 0) {
             return

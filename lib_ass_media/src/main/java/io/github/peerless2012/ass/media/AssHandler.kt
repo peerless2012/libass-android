@@ -53,6 +53,14 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     var surfaceSize = Size.ZERO
         private set
 
+    var videoTime = -1L
+        set(value) {
+            if (field == value) {
+                return
+            }
+            field = value
+        }
+
     /** The overlay manager for toggling the effects renderer. */
     private var overlayManager: AssOverlayManager? = null
 
@@ -70,7 +78,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         player.addListener(this)
         handler = Handler(player.applicationLooper)
         if (renderType != AssRenderType.LEGACY) {
-            overlayManager = AssOverlayManager(player, renderType == AssRenderType.OPEN_GL)
+            overlayManager = AssOverlayManager(this, player, renderType == AssRenderType.OPEN_GL)
         }
     }
 
@@ -85,6 +93,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         track = null
         availableTracks.clear()
         videoSize = Size.ZERO
+        videoTime = -1
         overlayManager?.disable()
     }
 
