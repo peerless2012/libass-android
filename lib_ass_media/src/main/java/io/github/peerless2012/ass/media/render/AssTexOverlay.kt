@@ -8,12 +8,13 @@ import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.TextureOverlay
 import io.github.peerless2012.ass.AssRender
+import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.executor.AssExecutor
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 @OptIn(UnstableApi::class)
-class AssTexOverlay(private val render: AssRender) : TextureOverlay() {
+class AssTexOverlay(private val handler: AssHandler, private val render: AssRender) : TextureOverlay() {
 
     private val vertexShaderCode = """
             attribute vec4 a_Position;
@@ -77,7 +78,12 @@ class AssTexOverlay(private val render: AssRender) : TextureOverlay() {
     private lateinit var executor: AssExecutor
 
     override fun getTextureId(presentationTimeUs: Long): Int {
-        val assFrame = executor.renderFrame(presentationTimeUs)
+        val timeUs = if (handler.videoTime >= 0) {
+            handler.videoTime
+        } else {
+            presentationTimeUs
+        }
+        val assFrame = executor.renderFrame(timeUs)
 
         // if content not change, just return the tex
         if (assFrame != null && assFrame.changed == 0) {
