@@ -38,6 +38,11 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     var render: AssRender? = null
         private set
 
+    /**
+     * AssRender changed callback
+     */
+    var renderCallback: ((AssRender?) -> Unit)? = null
+
     /** The currently selected ASS track. */
     var track: AssTrack? = null
         private set
@@ -59,7 +64,10 @@ class AssHandler(val renderType: AssRenderType) : Listener {
                 return
             }
             field = value
+            videoTimeCallback?.invoke(value)
         }
+
+    var videoTimeCallback: ((Long) -> Unit)? = null
 
     /** The overlay manager for toggling the effects renderer. */
     private var overlayManager: AssOverlayManager? = null
@@ -77,7 +85,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     fun init(player: ExoPlayer) {
         player.addListener(this)
         handler = Handler(player.applicationLooper)
-        if (renderType != AssRenderType.LEGACY) {
+        if (renderType == AssRenderType.CANVAS || renderType == AssRenderType.OPEN_GL) {
             overlayManager = AssOverlayManager(this, player, renderType == AssRenderType.OPEN_GL)
         }
     }
@@ -95,6 +103,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         videoSize = Size.ZERO
         videoTime = -1
         overlayManager?.disable()
+        renderCallback?.invoke(null)
     }
 
     /**
@@ -146,6 +155,8 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         overlayManager?.let {
             handler.post { it.enable(render) }
         }
+
+        renderCallback?.invoke(render)
     }
 
     /**
