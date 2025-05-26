@@ -53,6 +53,22 @@ class AssExecutor(private val render: AssRender) {
         return assFrame
     }
 
+    public fun asyncRenderFrame(presentationTimeUs: Long, callback: (AssFrame?) -> Unit) {
+        if (executorBusy) {
+            // render thread is busy, keep last content
+            callback.invoke(assFrameNotChange)
+        } else {
+            // submit render task
+            executorService.submit{
+                executorBusy = true
+                lastFrame = render.renderFrame(presentationTimeUs / 1000, true)
+                callback.invoke(lastFrame)
+                executorBusy = false
+                lastFrame
+            }
+        }
+    }
+
     public fun shutdown() {
         executor.shutdown()
     }

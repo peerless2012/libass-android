@@ -18,6 +18,10 @@ enum class AssRenderType {
     /**
      * Use Effect(Powered by OpenGL)
      */
-    OPEN_GL
+    OPEN_GL,
 
+    /**
+     * Use Widget overlay.
+     */
+    OVERLAY
 }

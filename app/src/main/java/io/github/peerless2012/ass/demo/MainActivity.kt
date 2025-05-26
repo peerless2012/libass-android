@@ -44,13 +44,14 @@ class MainActivity : AppCompatActivity() {
         }
         val toolbar = findViewById<MaterialToolbar>(R.id.main_toolbar)
         setSupportActionBar(toolbar)
+        playerView = findViewById(R.id.main_player)
 
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
                 this,
-                AssRenderType.CANVAS
+                AssRenderType.OVERLAY,
+                playerView.subtitleView
             )
-        playerView = findViewById(R.id.main_player)
         playerView.player = player
         val enConfig = MediaItem.SubtitleConfiguration
             .Builder(Uri.parse("http://192.168.0.254:80/files/f-en.ass"))
@@ -93,7 +94,7 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_audio -> selectTrack(C.TRACK_TYPE_AUDIO)
             R.id.menu_sub -> selectTrack(C.TRACK_TYPE_TEXT)
             R.id.menu_resize_fit -> playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-            R.id.menu_resize_crop -> playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+            R.id.menu_resize_crop -> playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
         }
         return super.onOptionsItemSelected(item)
     }
