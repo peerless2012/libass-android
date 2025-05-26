@@ -1,6 +1,7 @@
 package io.github.peerless2012.ass.media.parser
 
 import androidx.media3.common.Format
+import androidx.media3.common.MediaLibraryInfo
 import androidx.media3.common.text.Cue
 import androidx.media3.common.util.Consumer
 import androidx.media3.common.util.UnstableApi
@@ -49,8 +50,12 @@ abstract class AssSubtitleParser(
             val frames = assHandler.render?.renderFrame(event.start + fadeIn, false)
             frames?.images?.let { texts ->
                 texts.forEach { tex ->
-                    val cue = Cue.Builder()
-                        .setZIndex(event.layer)
+                    val cueBuilder = Cue.Builder()
+                    // For users use stable media3
+                    if (MediaLibraryInfo.VERSION_INT > 1_008_000_0_00) {
+                        cueBuilder.setZIndex(event.layer)
+                    }
+                    val cue = cueBuilder
                         .setBitmap(tex.bitmap)
                         .setPosition(tex.x / assHandler.videoSize.width.toFloat())
                         .setPositionAnchor(Cue.ANCHOR_TYPE_START)
