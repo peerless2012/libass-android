@@ -63,14 +63,6 @@ class AssSubtitleView: View {
         this.assHandler = assHandler
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        if (assHandler.renderType != AssRenderType.OVERLAY) {
-            return
-        }
-        assHandler.render?.setFrameSize(w, h)
-    }
-
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (assHandler.renderType != AssRenderType.OVERLAY) {
@@ -79,12 +71,11 @@ class AssSubtitleView: View {
         assHandler.render?.let {
             assExecutor = AssExecutor(it)
         }
-        assHandler.renderCallback = {
-            if (it == null) {
-                assExecutor?.shutdown()
-                assExecutor = null
-            } else {
-                assExecutor = AssExecutor(it)
+        assHandler.renderCallback = { assRender ->
+            assExecutor?.shutdown()
+            assExecutor = null
+            if (assRender != null) {
+                assExecutor = AssExecutor(assRender)
             }
         }
         assHandler.videoTimeCallback = { presentationTimeUs ->
