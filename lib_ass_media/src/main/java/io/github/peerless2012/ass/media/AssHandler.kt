@@ -148,15 +148,17 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         this.track = track
         val render = requireNotNull(render)
         render.setStorageSize(videoSize.width, videoSize.height)
-        render.setFrameSize(videoSize.width, videoSize.height)
+        if (renderType == AssRenderType.OVERLAY) {
+            render.setFrameSize(surfaceSize.width, surfaceSize.height)
+        } else {
+            render.setFrameSize(videoSize.width, videoSize.height)
+        }
         render.setTrack(track)
 
         // Player func call need in create thread.
         overlayManager?.let {
             handler.post { it.enable(render) }
         }
-
-        renderCallback?.invoke(render)
     }
 
     /**
@@ -170,6 +172,9 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         Log.i("AssHandler", "onSurfaceSizeChanged: width = $width, height = $height")
         if (surfaceSize.width == width && surfaceSize.height == height) return
         surfaceSize = Size(width, height)
+        if (renderType == AssRenderType.OVERLAY && surfaceSize.isValid) {
+            render?.setFrameSize(surfaceSize.width, surfaceSize.height)
+        }
     }
 
     override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -233,7 +238,17 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             if (videoSize.isValid) {
                 render.setFrameSize(videoSize.width, videoSize.height)
             }
+            if (renderType == AssRenderType.OVERLAY) {
+                if (surfaceSize.isValid) {
+                    render.setFrameSize(surfaceSize.width, surfaceSize.height)
+                }
+            } else {
+                if (videoSize.isValid) {
+                    render.setFrameSize(videoSize.width, videoSize.height)
+                }
+            }
         }
+        renderCallback?.invoke(render)
     }
 
     /**

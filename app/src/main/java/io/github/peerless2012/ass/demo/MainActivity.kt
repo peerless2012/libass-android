@@ -23,10 +23,11 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.common.collect.ImmutableList
 import io.github.peerless2012.ass.media.kt.buildWithAssSupport
 import io.github.peerless2012.ass.media.type.AssRenderType
+import androidx.core.net.toUri
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.254:80/files/c.mkv"
+    private var url = "http://192.168.0.254:80/files/f.mp4"
 
     private lateinit var player: ExoPlayer
 
@@ -54,7 +55,7 @@ class MainActivity : AppCompatActivity() {
             )
         playerView.player = player
         val enConfig = MediaItem.SubtitleConfiguration
-            .Builder(Uri.parse("http://192.168.0.254:80/files/f-en.ass"))
+            .Builder(Uri.parse("http://192.168.0.254:80/files/e.ass"))
             .setMimeType(MimeTypes.TEXT_SSA)
             .setLanguage("en")
             .setLabel("External ass en")
@@ -93,6 +94,28 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_url-> switchUrl()
             R.id.menu_audio -> selectTrack(C.TRACK_TYPE_AUDIO)
             R.id.menu_sub -> selectTrack(C.TRACK_TYPE_TEXT)
+            R.id.menu_sub_add -> {
+                player.currentMediaItem?.let {
+                    val url = "http://192.168.199.138:8080/files/f-d.ass"
+                    val preSubtitleConfigurations = it.localConfiguration?.subtitleConfigurations
+                    if (preSubtitleConfigurations == null || preSubtitleConfigurations.find { it.uri.toString() == url } == null) {
+                        val dynamicConfig = MediaItem.SubtitleConfiguration
+                            .Builder(url.toUri())
+                            .setMimeType(MimeTypes.TEXT_SSA)
+                            .setLanguage("zh-en")
+                            .setLabel("External dynamic ass")
+                            .setId("199")
+                            .build()
+                        val subtitleConfigurations = if (preSubtitleConfigurations == null) {
+                            ImmutableList.of(dynamicConfig)
+                        } else {
+                            ImmutableList.of(dynamicConfig) + preSubtitleConfigurations
+                        }
+                        val newMediaItem = it.buildUpon().setSubtitleConfigurations(subtitleConfigurations).build()
+                        player.setMediaItem(newMediaItem, false)
+                    }
+                }
+            }
             R.id.menu_resize_fit -> playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             R.id.menu_resize_crop -> playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
         }
