@@ -59,12 +59,18 @@ class AssExecutor(private val render: AssRender) {
             callback.invoke(assFrameNotChange)
         } else {
             // submit render task
-            executorService.submit{
+            executor.submit{
                 executorBusy = true
-                lastFrame = render.renderFrame(presentationTimeUs / 1000, true)
-                callback.invoke(lastFrame)
-                executorBusy = false
-                lastFrame
+                var result: AssFrame? = null
+                try {
+                    result = render.renderFrame(presentationTimeUs / 1000, true)
+                    lastFrame = result
+                } catch (e: Exception) {
+                    result = null
+                } finally {
+                    executorBusy = false
+                    callback.invoke(result)
+                }
             }
         }
     }
