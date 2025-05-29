@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <item android:id="@+id/menu_gc" android:title="System GC"/>
+
     <item android:id="@+id/menu_url" android:title="Url"/>
 
     <item android:id="@+id/menu_audio" android:title="Audio"/>

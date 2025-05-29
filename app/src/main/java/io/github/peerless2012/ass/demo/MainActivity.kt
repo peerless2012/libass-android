@@ -91,6 +91,7 @@ class MainActivity : AppCompatActivity() {
     @OptIn(UnstableApi::class)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
+            R.id.menu_gc-> System.gc()
             R.id.menu_url-> switchUrl()
             R.id.menu_audio -> selectTrack(C.TRACK_TYPE_AUDIO)
             R.id.menu_sub -> selectTrack(C.TRACK_TYPE_TEXT)

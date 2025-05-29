@@ -58,8 +58,8 @@ class AssExecutor(private val render: AssRender) {
             // render thread is busy, keep last content
             callback.invoke(assFrameNotChange)
         } else {
-            // submit render task
-            executor.submit{
+            // execute render task
+            executor.execute{
                 executorBusy = true
                 var result: AssFrame? = null
                 try {
@@ -68,8 +68,8 @@ class AssExecutor(private val render: AssRender) {
                 } catch (e: Exception) {
                     result = null
                 } finally {
-                    executorBusy = false
                     callback.invoke(result)
+                    executorBusy = false
                 }
             }
         }
