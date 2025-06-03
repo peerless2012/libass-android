@@ -7,7 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <jni.h>
-#include "ass.h"
+#include "ass/ass.h"
+#include "fontconfig/fontconfig.h"
 
 #define LOG_TAG "SubtitleRenderer"
 
@@ -15,6 +16,7 @@
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 jlong nativeAssInit(JNIEnv* env, jclass clazz) {
+    FcInit();
     ASS_Library* assLibrary = ass_library_init();
     ass_set_fonts_dir(assLibrary, "/system/fonts");
     ass_set_extract_fonts(assLibrary, 1);
@@ -42,6 +44,7 @@ void nativeAssDeinit(JNIEnv* env, jclass clazz, jlong ass) {
     if (ass) {
         ass_library_done((ASS_Library *) ass);
     }
+    FcFini();
 }
 
 static JNINativeMethod method_table[] = {
