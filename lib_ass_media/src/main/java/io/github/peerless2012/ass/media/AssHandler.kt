@@ -247,6 +247,9 @@ class AssHandler(val renderType: AssRenderType) : Listener {
                     render.setFrameSize(videoSize.width, videoSize.height)
                 }
             }
+            val totalMemoryBytes = Runtime.getRuntime().maxMemory()
+            Log.i("AssHandler", "JVM max memory: ${totalMemoryBytes / (1024 * 1024)}MB")
+            render.setCacheLimit(1024, (totalMemoryBytes / 4).toInt())
         }
         renderCallback?.invoke(render)
     }

@@ -192,6 +192,10 @@ void nativeAssRenderSetFontScale(JNIEnv* env, jclass clazz, jlong render, jfloat
     ass_set_font_scale((ASS_Renderer *) render, scale);
 }
 
+void nativeAssRenderSetCacheLimit(JNIEnv* env, jclass clazz, jlong render, jint glyphMax, jint bitmapMaxSize) {
+    ass_set_cache_limits((ASS_Renderer *) render, glyphMax, bitmapMaxSize);
+}
+
 void nativeAssRenderSetFrameSize(JNIEnv* env, jclass clazz, jlong render, jint width, jint height) {
     ass_set_frame_size((ASS_Renderer *) render, width, height);
 }
@@ -331,6 +335,7 @@ void nativeAssRenderDeinit(JNIEnv* env, jclass clazz, jlong render) {
 static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderInit", "(J)J", (void*)nativeAssRenderInit},
         {"nativeAssRenderSetFontScale", "(JF)V", (void*)nativeAssRenderSetFontScale},
+        {"nativeAssRenderSetCacheLimit", "(JII)V", (void*)nativeAssRenderSetCacheLimit},
         {"nativeAssRenderSetStorageSize", "(JII)V", (void*) nativeAssRenderSetStorageSize},
         {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
         {"nativeAssRenderFrame", "(JJJZ)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},

@@ -18,6 +18,9 @@ class AssRender(nativeAss: Long) {
         external fun nativeAssRenderSetFontScale(render: Long, scale: Float)
 
         @JvmStatic
+        external fun nativeAssRenderSetCacheLimit(render: Long, glyphMax: Int, bitmapMaxSize: Int)
+
+        @JvmStatic
         external fun nativeAssRenderSetStorageSize(render: Long, width: Int, height: Int)
 
         @JvmStatic
@@ -40,6 +43,10 @@ class AssRender(nativeAss: Long) {
 
     public fun setFontScale(scale: Float) {
         nativeAssRenderSetFontScale(nativeRender, scale)
+    }
+
+    public fun setCacheLimit(glyphMax: Int, bitmapMaxSize: Int) {
+        nativeAssRenderSetCacheLimit(nativeRender, glyphMax, bitmapMaxSize)
     }
 
     public fun setStorageSize(width: Int, height: Int) {
