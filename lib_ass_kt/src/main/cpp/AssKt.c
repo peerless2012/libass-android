@@ -7,16 +7,43 @@
 #include <stdlib.h>
 #include <string.h>
 #include <jni.h>
-#include "ass.h"
+#include "ass/ass.h"
+#include "fontconfig/fontconfig.h"
 
 #define LOG_TAG "SubtitleRenderer"
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+
+void assMessageCallback(int level, const char *fmt, va_list args, void *data) {
+    if (level > 4) return;
+
+    char message[1024];
+    va_list args_copy;
+    va_copy(args_copy, args);
+
+    int ret = vsnprintf(message, sizeof(message), fmt, args_copy);
+    va_end(args_copy);
+
+    if (ret < 0) {
+        LOGE("Formatting error in Ass message callback");
+        return;
+    } else if (ret >= sizeof(message)) {
+        message[sizeof(message) - 1] = '\0';
+        LOGW("Ass message truncated: %s", message);
+    }
+
+    if (level >= 2) {
+        LOGW("Ass: %s", message);
+    } else {
+        LOGE("Ass: %s", message);
+    }
+}
 
 jlong nativeAssInit(JNIEnv* env, jclass clazz) {
     ASS_Library* assLibrary = ass_library_init();
-    ass_set_fonts_dir(assLibrary, "/system/fonts");
+    ass_set_message_cb(assLibrary, assMessageCallback, env);
     ass_set_extract_fonts(assLibrary, 1);
     return (jlong) assLibrary;
 }
@@ -157,10 +184,7 @@ static JNINativeMethod trackMethodTable[] = {
 
 jlong nativeAssRenderInit(JNIEnv* env, jclass clazz, jlong ass) {
     ASS_Renderer *assRenderer = ass_renderer_init((ASS_Library *) ass);
-    ass_set_fonts(assRenderer, "/system/fonts/NotoSansCJK-Regular.ttc", "sans-serif", 1, NULL, 1);
-//    ass_set_message_cb(ass_library, [](int level, const char *fmt, va_list args, void *data) {
-//        vprintf(fmt, args);
-//    }, NULL);
+    ass_set_fonts(assRenderer, NULL, "sans-serif", ASS_FONTPROVIDER_FONTCONFIG, NULL, 1);
     return (jlong) assRenderer;
 }
 
