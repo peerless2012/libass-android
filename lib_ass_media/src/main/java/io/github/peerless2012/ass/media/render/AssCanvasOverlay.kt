@@ -53,14 +53,16 @@ class AssCanvasOverlay(private val handler: AssHandler, private val render: AssR
         assFrame?.images?.let { frames ->
             texDirty = true
             frames.forEach { frame ->
-                val r = frame.color shr 24 and 0xFF
-                val g = frame.color shr 16 and 0xFF
-                val b = frame.color shr 8 and 0xFF
-                val a = 0xFF - frame.color and 0xFF
-                val color = (a shl 24) or (r shl 16) or (g shl 8) or b
+                frame.bitmap?.let { bitmap ->
+                    val r = frame.color shr 24 and 0xFF
+                    val g = frame.color shr 16 and 0xFF
+                    val b = frame.color shr 8 and 0xFF
+                    val a = 0xFF - frame.color and 0xFF
+                    val color = (a shl 24) or (r shl 16) or (g shl 8) or b
 
-                paint.color = color
-                canvas.drawBitmap(frame.bitmap, frame.x.toFloat(), frame.y.toFloat(), paint)
+                    paint.color = color
+                    canvas.drawBitmap(bitmap, frame.x.toFloat(), frame.y.toFloat(), paint)
+                }
             }
         }
     }
