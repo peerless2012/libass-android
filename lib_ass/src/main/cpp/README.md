@@ -5,7 +5,10 @@
 1. prepare
     * install `libtool`
     * install `perl`
+    * install `gperf`
+    * install `gettext`
     * install `autopoint`
+    * install `autoconf` >= 2.7.1
     * install `ninja-build`
 
 2. config
