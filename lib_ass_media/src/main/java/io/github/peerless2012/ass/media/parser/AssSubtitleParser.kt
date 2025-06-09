@@ -50,21 +50,23 @@ abstract class AssSubtitleParser(
             val frames = assHandler.render?.renderFrame(event.start + fadeIn, false)
             frames?.images?.let { texts ->
                 texts.forEach { tex ->
-                    val cueBuilder = Cue.Builder()
-                    // For users use stable media3
-                    if (MediaLibraryInfo.VERSION_INT > 1_008_000_0_00) {
-                        cueBuilder.setZIndex(event.layer)
+                    tex.bitmap?.let { bitmap ->
+                        val cueBuilder = Cue.Builder()
+                        // For users use stable media3
+                        if (MediaLibraryInfo.VERSION_INT > 1_008_000_0_00) {
+                            cueBuilder.setZIndex(event.layer)
+                        }
+                        val cue = cueBuilder
+                            .setBitmap(bitmap)
+                            .setPosition(tex.x / assHandler.videoSize.width.toFloat())
+                            .setPositionAnchor(Cue.ANCHOR_TYPE_START)
+                            .setLine(tex.y / assHandler.videoSize.height.toFloat(), Cue.LINE_TYPE_FRACTION)
+                            .setLineAnchor(Cue.ANCHOR_TYPE_START)
+                            .setSize(bitmap.width / assHandler.videoSize.width.toFloat())
+                            .setBitmapHeight(bitmap.height / assHandler.videoSize.height.toFloat())
+                            .build()
+                        cues.add(cue)
                     }
-                    val cue = cueBuilder
-                        .setBitmap(tex.bitmap)
-                        .setPosition(tex.x / assHandler.videoSize.width.toFloat())
-                        .setPositionAnchor(Cue.ANCHOR_TYPE_START)
-                        .setLine(tex.y / assHandler.videoSize.height.toFloat(), Cue.LINE_TYPE_FRACTION)
-                        .setLineAnchor(Cue.ANCHOR_TYPE_START)
-                        .setSize(tex.bitmap.width / assHandler.videoSize.width.toFloat())
-                        .setBitmapHeight(tex.bitmap.height / assHandler.videoSize.height.toFloat())
-                        .build()
-                    cues.add(cue)
                 }
                 val cwt = CuesWithTiming(cues, (event.start + fadeIn) * 1000
                     , (event.duration - fadeIn - fadeOut) * 1000)

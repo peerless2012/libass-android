@@ -305,7 +305,7 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
 
     int size = count_ass_images(image);
     jclass assTexClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssTex");
-    jmethodID assTexConstructor = (*env)->GetMethodID(env, assTexClass, "<init>", "(IILandroid/graphics/Bitmap;I)V");
+    jmethodID assTexConstructor = (*env)->GetMethodID(env, assTexClass, "<init>", "(IIILandroid/graphics/Bitmap;)V");
 
     jobjectArray assTexArr = (*env)->NewObjectArray(env, size, assTexClass, NULL);
     if (assTexArr == NULL) {
@@ -314,10 +314,13 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
 
     int index = 0;
     for (ASS_Image *img = image; img != NULL; img = img->next) {
-        jobject bitmap = onlyAlpha ? createAlphaBitmap(env, img) : createBitmap(env, img);
+        jobject bitmap = NULL;
+        if (image->w > 0 && image->h > 0) {
+            bitmap = onlyAlpha ? createAlphaBitmap(env, img) : createBitmap(env, img);
+        }
         int32_t color = (int32_t) img->color;
 
-        jobject assTexObject = (*env)->NewObject(env, assTexClass, assTexConstructor, img->dst_x, img->dst_y, bitmap, color);
+        jobject assTexObject = (*env)->NewObject(env, assTexClass, assTexConstructor, img->dst_x, img->dst_y, color, bitmap);
 
         (*env)->SetObjectArrayElement(env, assTexArr, index, assTexObject);
         index++;

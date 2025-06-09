@@ -136,23 +136,25 @@ class AssTexOverlay(private val handler: AssHandler, private val render: AssRend
             GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
 
             frames.forEach { frame ->
-                val r = frame.color shr 24 and 0xFF
-                val g = frame.color shr 16 and 0xFF
-                val b = frame.color shr 8 and 0xFF
-                val a = 0xFF - frame.color and 0xFF
+                frame.bitmap?.let { bitmap ->
+                    val r = frame.color shr 24 and 0xFF
+                    val g = frame.color shr 16 and 0xFF
+                    val b = frame.color shr 8 and 0xFF
+                    val a = 0xFF - frame.color and 0xFF
 
-                val txt = GlUtil.createTexture(frame.bitmap)
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, txt)
-                GlUtil.checkGlError()
+                    val txt = GlUtil.createTexture(bitmap)
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, txt)
+                    GlUtil.checkGlError()
 
-                GLES20.glViewport(frame.x, texSize.height - frame.bitmap.height - frame.y, frame.bitmap.width, frame.bitmap.height)
-                GLES20.glUniform4f(glProgram.getUniformLocation("u_Color"), r / 255f, g / 255f, b / 255f, a / 255f)
+                    GLES20.glViewport(frame.x, texSize.height - bitmap.height - frame.y, bitmap.width, bitmap.height)
+                    GLES20.glUniform4f(glProgram.getUniformLocation("u_Color"), r / 255f, g / 255f, b / 255f, a / 255f)
 
-                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
-                GlUtil.checkGlError()
+                    GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+                    GlUtil.checkGlError()
 
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
-                GlUtil.deleteTexture(txt)
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+                    GlUtil.deleteTexture(txt)
+                }
             }
             GLES20.glUseProgram(preProgram[0])
         }
