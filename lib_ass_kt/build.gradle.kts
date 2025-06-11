@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "io.github.peerless2012.ass.kt"
     compileSdk = 35
+    ndkVersion = "28.1.13356709"
 
     defaultConfig {
         minSdk = 21
@@ -21,9 +22,11 @@ android {
             }
         }
     }
+
     buildFeatures {
         prefab = true
     }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -33,13 +36,16 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
