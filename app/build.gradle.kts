@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId = "io.github.peerless2012.ass"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -30,20 +30,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
-    }
-    packagingOptions {
-        pickFirsts +=  listOf(
-            "lib/armeabi-v7a/libc++_shared.so",
-            "lib/arm64-v8a/libc++_shared.so",
-            "lib/x86/libc++_shared.so",
-            "lib/x86_64/libc++_shared.so"
-        )
     }
 }
 
