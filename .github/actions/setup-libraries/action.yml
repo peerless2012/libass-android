@@ -1,0 +1,24 @@
+name: Setup Libraries
+description: Runs autogen.sh in required folders
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Running autogen.sh in unibreak
+      run: NOCONFIGURE=1 ./autogen.sh
+      shell: bash
+      working-directory: lib_ass/src/main/cpp/libass-cmake/src/unibreak
+
+    - name: Running autogen.sh in fribidi
+      run: NOCONFIGURE=1 ./autogen.sh
+      shell: bash
+      working-directory: lib_ass/src/main/cpp/libass-cmake/src/fribidi
+
+    - name: Running autogen.sh in ass
+      run: ./autogen.sh
+      shell: bash
+      working-directory: lib_ass/src/main/cpp/libass-cmake/src/ass
