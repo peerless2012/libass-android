@@ -17,6 +17,7 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.Libassandroid"
         tools:targetApi="31">
+        <profileable android:shell="true" />
         <activity
             android:name=".MainActivity"
             android:screenOrientation="landscape"

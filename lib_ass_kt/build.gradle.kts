@@ -28,6 +28,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            externalNativeBuild {
+                cmake {
+                    cppFlags("-fno-omit-frame-pointer")
+                }
+            }
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
