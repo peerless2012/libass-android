@@ -59,6 +59,9 @@ void nativeAssAddFont(JNIEnv* env, jclass clazz, jlong ass, jstring name, jbyteA
     const char * cName = (*env)->GetStringUTFChars(env, name, NULL);
     ass_add_font(((ASS_Library *) ass), cName, bytePtr, length);
     (*env)->ReleaseByteArrayElements(env, byteArray, bytePtr, 0);
+    if (cName != NULL) {
+        (*env)->ReleaseStringUTFChars(env, name, cName);
+    }
 }
 
 void nativeAssClearFont(JNIEnv* env, jclass clazz, jlong ass) {
