@@ -59,6 +59,9 @@ void nativeAssAddFont(JNIEnv* env, jclass clazz, jlong ass, jstring name, jbyteA
     const char * cName = (*env)->GetStringUTFChars(env, name, NULL);
     ass_add_font(((ASS_Library *) ass), cName, bytePtr, length);
     (*env)->ReleaseByteArrayElements(env, byteArray, bytePtr, 0);
+    if (cName != NULL) {
+        (*env)->ReleaseStringUTFChars(env, name, cName);
+    }
 }
 
 void nativeAssClearFont(JNIEnv* env, jclass clazz, jlong ass) {
@@ -315,7 +318,7 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
     int index = 0;
     for (ASS_Image *img = image; img != NULL; img = img->next) {
         jobject bitmap = NULL;
-        if (image->w > 0 && image->h > 0) {
+        if (img->w > 0 && img->h > 0) {
             bitmap = onlyAlpha ? createAlphaBitmap(env, img) : createBitmap(env, img);
         }
         int32_t color = (int32_t) img->color;
@@ -323,6 +326,10 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
         jobject assTexObject = (*env)->NewObject(env, assTexClass, assTexConstructor, img->dst_x, img->dst_y, color, bitmap);
 
         (*env)->SetObjectArrayElement(env, assTexArr, index, assTexObject);
+        (*env)->DeleteLocalRef(env, assTexObject);
+        if (bitmap != NULL) {
+            (*env)->DeleteLocalRef(env, bitmap);
+        }
         index++;
     }
 
