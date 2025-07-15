@@ -12,32 +12,13 @@
 
 #define LOG_TAG "SubtitleRenderer"
 
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-
 void assMessageCallback(int level, const char *fmt, va_list args, void *data) {
     if (level > 4) return;
 
-    char message[1024];
-    va_list args_copy;
-    va_copy(args_copy, args);
-
-    int ret = vsnprintf(message, sizeof(message), fmt, args_copy);
-    va_end(args_copy);
-
-    if (ret < 0) {
-        LOGE("Formatting error in Ass message callback");
-        return;
-    } else if (ret >= sizeof(message)) {
-        message[sizeof(message) - 1] = '\0';
-        LOGW("Ass message truncated: %s", message);
-    }
-
     if (level >= 2) {
-        LOGW("Ass: %s", message);
+        __android_log_vprint(ANDROID_LOG_WARN, LOG_TAG, fmt, args);
     } else {
-        LOGE("Ass: %s", message);
+        __android_log_vprint(ANDROID_LOG_ERROR, LOG_TAG, fmt, args);
     }
 }
 
