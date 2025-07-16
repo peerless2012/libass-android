@@ -72,7 +72,6 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             }
             field = value
             if (videoFrameIndex == 0) {
-                Log.i("AssHandler", "render = " + videoTime)
                 videoTimeCallback?.invoke(value)
             }
             videoFrameIndex++
