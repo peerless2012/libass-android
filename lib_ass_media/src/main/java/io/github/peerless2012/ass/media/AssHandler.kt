@@ -19,6 +19,8 @@ import io.github.peerless2012.ass.Ass
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssOverlayManager
 import io.github.peerless2012.ass.media.type.AssRenderType
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
 /**
  * Handles ASS subtitle rendering and integration with ExoPlayer.
@@ -58,13 +60,25 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     var surfaceSize = Size.ZERO
         private set
 
+    /**  The video frame time. (default is 24fps)  */
+    val videoFramePeriod = 3
+
+    private var videoFrameIndex = 0
+
     var videoTime = -1L
         set(value) {
             if (field == value) {
                 return
             }
             field = value
-            videoTimeCallback?.invoke(value)
+            if (videoFrameIndex == 0) {
+                Log.i("AssHandler", "render = " + videoTime)
+                videoTimeCallback?.invoke(value)
+            }
+            videoFrameIndex++
+            if (videoFrameIndex >= videoFramePeriod) {
+                videoFrameIndex %= videoFramePeriod
+            }
         }
 
     var videoTimeCallback: ((Long) -> Unit)? = null
@@ -102,6 +116,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         availableTracks.clear()
         videoSize = Size.ZERO
         videoTime = -1
+        videoFrameIndex = 0
         overlayManager?.disable()
         renderCallback?.invoke(null)
     }
