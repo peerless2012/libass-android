@@ -1,4 +1,3 @@
-import com.vanniktech.maven.publish.SonatypeHost
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 
 plugins {
@@ -9,7 +8,7 @@ plugins {
 
 android {
     namespace = "io.github.peerless2012.ass.kt"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "28.1.13356709"
 
     defaultConfig {
@@ -69,7 +68,7 @@ dependencies {
 }
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
     // https://vanniktech.github.io/gradle-maven-publish-plugin/what/
     configure(AndroidSingleVariantLibrary())
     signAllPublications()
