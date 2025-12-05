@@ -27,7 +27,7 @@ import androidx.core.net.toUri
 
 class MainActivity : AppCompatActivity() {
 
-    private var url = "http://192.168.0.254:80/files/c.mkv"
+    private var url = "http://192.168.3.6:8080/files/c.mkv"
 
     private lateinit var player: ExoPlayer
 
@@ -50,12 +50,12 @@ class MainActivity : AppCompatActivity() {
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
                 this,
-                AssRenderType.OVERLAY,
+                AssRenderType.OVERLAY_OPEN_GL,
                 playerView.subtitleView
             )
         playerView.player = player
         val enConfig = MediaItem.SubtitleConfiguration
-            .Builder(Uri.parse("http://192.168.0.254:80/files/e.ass"))
+            .Builder(Uri.parse("http://192.168.3.6:8080/files/e.ass"))
             .setMimeType(MimeTypes.TEXT_SSA)
             .setLanguage("en")
             .setLabel("External ass en")
@@ -63,14 +63,14 @@ class MainActivity : AppCompatActivity() {
             .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
             .build()
         val jpConfig = MediaItem.SubtitleConfiguration
-            .Builder(Uri.parse("http://192.168.0.254:80/files/f-jp.ass"))
+            .Builder(Uri.parse("http://192.168.3.6:8080/files/f-jp.ass"))
             .setMimeType(MimeTypes.TEXT_SSA)
             .setLanguage("jp")
             .setLabel("External ass jp")
             .setId("130")
             .build()
         val zhConfig = MediaItem.SubtitleConfiguration
-            .Builder(Uri.parse("http://192.168.0.254:80/files/f-zh.ass"))
+            .Builder(Uri.parse("http://192.168.3.6:8080/files/f-zh.ass"))
             .setMimeType(MimeTypes.TEXT_SSA)
             .setLanguage("zh")
             .setLabel("External ass zh")

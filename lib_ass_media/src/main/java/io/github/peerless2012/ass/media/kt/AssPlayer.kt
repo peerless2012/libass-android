@@ -23,7 +23,7 @@ import io.github.peerless2012.ass.media.widget.AssSubtitleView
 @OptIn(UnstableApi::class)
 fun ExoPlayer.Builder.buildWithAssSupport(
     context: Context,
-    renderType: AssRenderType = AssRenderType.LEGACY,
+    renderType: AssRenderType = AssRenderType.CUES,
     subtitleView: SubtitleView? = null,
     dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context),
     extractorsFactory: ExtractorsFactory = DefaultExtractorsFactory(),
@@ -45,7 +45,7 @@ fun ExoPlayer.Builder.buildWithAssSupport(
         .setRenderersFactory(renderersFactory.withAssSupport(assHandler))
         .build()
 
-    if (renderType === AssRenderType.OVERLAY) {
+    if (renderType === AssRenderType.OVERLAY_CANVAS || renderType === AssRenderType.OVERLAY_OPEN_GL) {
         subtitleView?.withAssSupport(assHandler)
     }
 

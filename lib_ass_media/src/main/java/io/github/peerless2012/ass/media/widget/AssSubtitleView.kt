@@ -1,15 +1,10 @@
 package io.github.peerless2012.ass.media.widget
-
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
 import android.util.AttributeSet
-import android.view.View
-import io.github.peerless2012.ass.AssFrame
+import android.widget.FrameLayout
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import io.github.peerless2012.ass.media.AssHandler
-import io.github.peerless2012.ass.media.executor.AssExecutor
 import io.github.peerless2012.ass.media.type.AssRenderType
 
 /**
@@ -19,34 +14,11 @@ import io.github.peerless2012.ass.media.type.AssRenderType
  * @Version V1.0
  * @Description
  */
-class AssSubtitleView: View {
-
-    private val paint = Paint().apply {
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
-    }
+class AssSubtitleView: FrameLayout {
 
     private val assHandler: AssHandler
 
-    private var assExecutor: AssExecutor? = null
-
-    private var assFrame: AssFrame? = null
-
-    // Use a local param, avoid create each time.
-    private val invalidateCallback = Runnable { invalidate() }
-
-    // Use a local param, avoid create each time.
-    private val assRenderCallback: (AssFrame?) -> Unit = assRenderCallback@{ assFrame ->
-        // Not change
-        if (assFrame != null && assFrame.changed == 0) {
-            return@assRenderCallback
-        }
-        // prepare to draw
-        assFrame?.images?.forEach {
-            it.bitmap?.prepareToDraw()
-        }
-        this.assFrame = assFrame
-        handler.post(invalidateCallback)
-    }
+    private var assSubtitleRender: AssSubtitleRender? = null
 
     constructor(context: Context, assHandler: AssHandler) : this(context, null, assHandler)
 
@@ -57,55 +29,39 @@ class AssSubtitleView: View {
         assHandler
     )
 
+    @OptIn(UnstableApi::class)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, assHandler: AssHandler) :
             super(context, attrs, defStyleAttr) {
-        setWillNotDraw(false)
         this.assHandler = assHandler
+        val view = when (assHandler.renderType) {
+            AssRenderType.OVERLAY_CANVAS -> {
+                AssSubtitleCanvasView(context, attrs, defStyleAttr, assHandler)
+            }
+            AssRenderType.OVERLAY_OPEN_GL -> {
+                AssSubtitleTextureView(context, attrs, defStyleAttr, assHandler)
+            }
+            else -> {
+                null
+            }
+        }
+        view?.let {
+            assSubtitleRender = it
+            val params = LayoutParams(MarginLayoutParams.MATCH_PARENT,
+                MarginLayoutParams.MATCH_PARENT)
+            addView(it, params)
+        }
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        if (assHandler.renderType != AssRenderType.OVERLAY) {
-            return
-        }
-        assHandler.render?.let {
-            assExecutor = AssExecutor(it)
-        }
-        assHandler.renderCallback = { assRender ->
-            assExecutor?.shutdown()
-            assExecutor = null
-            if (assRender != null) {
-                assExecutor = AssExecutor(assRender)
-            }
-        }
         assHandler.videoTimeCallback = { presentationTimeUs ->
-            assExecutor?.asyncRenderFrame(presentationTimeUs, assRenderCallback)
-        }
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        assFrame?.images?.let { frames ->
-            frames.forEach { frame ->
-                frame.bitmap?.let { bitmap ->
-                    val r = frame.color shr 24 and 0xFF
-                    val g = frame.color shr 16 and 0xFF
-                    val b = frame.color shr 8 and 0xFF
-                    val a = 0xFF - frame.color and 0xFF
-                    val color = (a shl 24) or (r shl 16) or (g shl 8) or b
-
-                    paint.color = color
-                    canvas.drawBitmap(bitmap, frame.x.toFloat(), frame.y.toFloat(), paint)
-                }
-            }
+            assSubtitleRender?.requestRender(presentationTimeUs)
         }
     }
 
     override fun onDetachedFromWindow() {
-        assHandler.renderCallback = null
-        assHandler.videoTimeCallback = null
-        assExecutor?.shutdown()
-        assExecutor = null
         super.onDetachedFromWindow()
+        assHandler.videoTimeCallback = null
     }
+
 }

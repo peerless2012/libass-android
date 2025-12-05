@@ -41,7 +41,7 @@ class AssMatroskaExtractor(
     override fun startMasterElement(id: Int, contentPosition: Long, contentSize: Long) {
         when (id) {
             ID_EBML -> {
-                if (assHandler.renderType != AssRenderType.LEGACY) {
+                if (assHandler.renderType != AssRenderType.CUES) {
                     val currentExtractor = extractorOutput.get(this) as ExtractorOutput
                     if (currentExtractor !is AssSubtitleExtractorOutput) {
                         extractorOutput.set(

@@ -27,7 +27,7 @@ class AssRender(nativeAss: Long) {
         external fun nativeAssRenderSetFrameSize(render: Long, width: Int, height: Int)
 
         @JvmStatic
-        external fun nativeAssRenderFrame(render: Long, track: Long, time: Long, onlyAlpha: Boolean): AssFrame?
+        external fun nativeAssRenderFrame(render: Long, track: Long, time: Long, type: Int): AssFrame?
 
         @JvmStatic
         external fun nativeAssRenderDeinit(render: Long)
@@ -57,8 +57,8 @@ class AssRender(nativeAss: Long) {
         nativeAssRenderSetFrameSize(nativeRender, width, height)
     }
 
-    public fun renderFrame(time: Long, onlyAlpha: Boolean): AssFrame? {
-        return track?.let { nativeAssRenderFrame(nativeRender, it.nativeAssTrack, time, onlyAlpha) }
+    public fun renderFrame(time: Long, type: AssTexType): AssFrame? {
+        return track?.let { nativeAssRenderFrame(nativeRender, it.nativeAssTrack, time, type.ordinal) }
     }
 
     protected fun finalize() {

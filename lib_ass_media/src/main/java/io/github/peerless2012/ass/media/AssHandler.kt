@@ -19,8 +19,6 @@ import io.github.peerless2012.ass.Ass
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssOverlayManager
 import io.github.peerless2012.ass.media.type.AssRenderType
-import kotlin.math.floor
-import kotlin.math.roundToInt
 
 /**
  * Handles ASS subtitle rendering and integration with ExoPlayer.
@@ -98,8 +96,8 @@ class AssHandler(val renderType: AssRenderType) : Listener {
     fun init(player: ExoPlayer) {
         player.addListener(this)
         handler = Handler(player.applicationLooper)
-        if (renderType == AssRenderType.CANVAS || renderType == AssRenderType.OPEN_GL) {
-            overlayManager = AssOverlayManager(this, player, renderType == AssRenderType.OPEN_GL)
+        if (renderType == AssRenderType.EFFECTS_CANVAS || renderType == AssRenderType.EFFECTS_OPEN_GL) {
+            overlayManager = AssOverlayManager(this, player, renderType == AssRenderType.EFFECTS_OPEN_GL)
         }
     }
 
@@ -162,7 +160,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         this.track = track
         val render = requireNotNull(render)
         render.setStorageSize(videoSize.width, videoSize.height)
-        if (renderType == AssRenderType.OVERLAY) {
+        if (renderType == AssRenderType.OVERLAY_CANVAS) {
             render.setFrameSize(surfaceSize.width, surfaceSize.height)
         } else {
             render.setFrameSize(videoSize.width, videoSize.height)
@@ -186,7 +184,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         Log.i("AssHandler", "onSurfaceSizeChanged: width = $width, height = $height")
         if (surfaceSize.width == width && surfaceSize.height == height) return
         surfaceSize = Size(width, height)
-        if (renderType == AssRenderType.OVERLAY && surfaceSize.isValid) {
+        if (renderType == AssRenderType.OVERLAY_CANVAS && surfaceSize.isValid) {
             render?.setFrameSize(surfaceSize.width, surfaceSize.height)
         }
     }
@@ -229,7 +227,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
 
         val track = ass.createTrack()
         if (format.initializationData.size > 0) {
-            val header = AssHeaderParser.parse(format, renderType != AssRenderType.LEGACY)
+            val header = AssHeaderParser.parse(format, renderType != AssRenderType.CUES)
             track.readBuffer(header)
         }
         availableTracks[format.id!!] = track
@@ -252,7 +250,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             if (videoSize.isValid) {
                 render.setFrameSize(videoSize.width, videoSize.height)
             }
-            if (renderType == AssRenderType.OVERLAY) {
+            if (renderType == AssRenderType.OVERLAY_CANVAS) {
                 if (surfaceSize.isValid) {
                     render.setFrameSize(surfaceSize.width, surfaceSize.height)
                 }

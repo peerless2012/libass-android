@@ -8,22 +8,27 @@ enum class AssRenderType {
     /**
      * Use SubtitleView render.
      */
-    LEGACY,
+    CUES,
 
     /**
      * Use Effect(Powered by canvas)
      */
     @Deprecated("Use OVERLAY instead.")
-    CANVAS,
+    EFFECTS_CANVAS,
 
     /**
      * Use Effect(Powered by OpenGL)
      */
     @Deprecated("Use OVERLAY instead.")
-    OPEN_GL,
+    EFFECTS_OPEN_GL,
 
     /**
-     * Use Widget overlay.
+     * Use Widget overlay(Powered by Canvas).
      */
-    OVERLAY
+    OVERLAY_CANVAS,
+
+    /**
+     * Use Widget overlay(Powered by OPEN GL).
+     */
+    OVERLAY_OPEN_GL,
 }
