@@ -7,33 +7,50 @@ App use media3 can use this module to add ass for your player.
 There are three ways to render ass subtitle.
 Which is defined in `AssRenderType`.
 
-| Type | Feature | Anim | HDR/DV |
-| :----: | :----: | :----: | :----: |
-| LEGACY | SubtitleView & Cue | ❌ | ✅ |
-| CANVAS | Effect | ✅ | ❓ |
-| OPEN_GL | Effect | ✅ | ❓ |
+| Type | Feature | Anim | HDR/DV | Block render/UI |
+| :----: | :----: | :----: | :----: | :----: |
+| CUES | SubtitleView & Cue | ❌ | ✅ | ❌ |
+| EFFECTS_CANVAS | Effect | ✅ | ❓ | ✅ |
+| EFFECTS_OPEN_GL | Effect | ✅ | ❓ | ✅ |
+| OVERLAY_CANVAS | Overlay | ✅ | ✅ | ✅ |
+| OVERLAY_OPEN_GL | Overlay | ✅ | ✅ | ❌ |
 
 * [OverlayShaderProgram does not support HDR colors yet](https://github.com/androidx/media/issues/723)
 * [Why does TextOverLay support hdr, but Bitmap not support?](https://github.com/androidx/media/issues/2383)
 
-### 1. LEGACY
+### 1. CUES
 The ass/ssa subtitle will be parsed and transcode to bytes, and decode to bitmap when render.
 
 This type not support dynamic feature, because all subtitle and it time is static.
 
 But since the subtitle is transcode, it will not cost too much time when render. All work is done in parse thread.
 
-### 2. CANVAS
+### 2. EFFECTS_CANVAS
 The ass/ssa subtitle will be cal and render at runtime use media3 effect feature, and this will support all dynamic features.
 
 And this need to create a screen size offscreen bitmap to render the libass bitmap pieces.
 
 But when the dynamic feature is too complex, and libass will cost too much time to cal, the render will be blocked.
 
-### 3. OPEN_GL
-Just like `CANVAS`, but use OpenGL to render. and the offscreen tex is create to render the bitmap pieces.
+### 3. EFFECTS_OPEN_GL
+Just like `EFFECTS_CANVAS`, but use OpenGL to render. and the offscreen tex is create to render the bitmap pieces.
 
-Due to test, the `OPEN_GL` will save 1/3 time when render.
+Due to test, the `EFFECTS_OPEN_GL` will save 1/3 time when render.
+
+### 4. OVERLAY_CANVAS
+The ass/ssa subtitle will be cal at runtime, and add a `Overlay` widget in `SubtitleView` to render subtitle.
+
+The `libass` render result will copy to bitmap, and draw in `Canvas`.
+
+It will block UI thread when rendering.
+
+### 4. OVERLAY_OPEN_GL
+Just like `OVERLAY_CANVAS`, but the `libass` render result will pass to `OpenGL` texture, and avoid create tmp bitmap.
+
+It will save half memory than `OVERLAY_CANVAS`.
+
+And the `libass` render and `OpenGL` draw on another separate thread, it will not block the UI thread like `OVERLAY_CANVAS`.
+
 
 ## How to use
 1. Add MavenCenter to your project
