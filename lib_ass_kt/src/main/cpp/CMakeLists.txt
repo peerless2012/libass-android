@@ -32,5 +32,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
         lib_ass::ass
         android
         jnigraphics
+        GLESv2
         z
         log)

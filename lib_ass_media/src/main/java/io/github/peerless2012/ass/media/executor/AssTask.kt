@@ -2,6 +2,7 @@ package io.github.peerless2012.ass.media.executor
 
 import io.github.peerless2012.ass.AssFrame
 import io.github.peerless2012.ass.AssRender
+import io.github.peerless2012.ass.AssTexType
 
 /**
  * @Author peerless2012
@@ -16,6 +17,8 @@ class AssTask(private val render: AssRender) : Runnable {
 
     var presentationTimeUs: Long = 0
 
+    var type: AssTexType = AssTexType.BITMAP_ALPHA
+
     var callback: ((AssFrame?) -> Unit)? = null
 
     private var lastFrame: AssFrame? = null
@@ -24,7 +27,7 @@ class AssTask(private val render: AssRender) : Runnable {
         executorBusy = true
         var result: AssFrame? = null
         try {
-            result = render.renderFrame(presentationTimeUs / 1000, true)
+            result = render.renderFrame(presentationTimeUs / 1000, type)
             lastFrame = result
         } catch (e: Exception) {
             result = null

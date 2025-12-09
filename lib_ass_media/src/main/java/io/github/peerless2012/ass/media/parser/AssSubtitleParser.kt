@@ -6,6 +6,7 @@ import androidx.media3.common.util.Consumer
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.text.CuesWithTiming
 import androidx.media3.extractor.text.SubtitleParser
+import io.github.peerless2012.ass.AssTexType
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.AssTrack
 import io.github.peerless2012.ass.media.type.AssRenderType
@@ -27,7 +28,7 @@ abstract class AssSubtitleParser(
         output: Consumer<CuesWithTiming>
     ) {
         onParse(data, offset, length)
-        if (assHandler.renderType != AssRenderType.LEGACY) {
+        if (assHandler.renderType != AssRenderType.CUES) {
             return
         }
         val events = track.getEvents()
@@ -46,7 +47,7 @@ abstract class AssSubtitleParser(
             }
 
             val cues = mutableListOf<Cue>()
-            val frames = assHandler.render?.renderFrame(event.start + fadeIn, false)
+            val frames = assHandler.render?.renderFrame(event.start + fadeIn, AssTexType.BITMAP_RGBA)
             frames?.images?.let { texts ->
                 texts.forEach { tex ->
                     tex.bitmap?.let { bitmap ->

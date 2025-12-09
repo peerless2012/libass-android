@@ -34,7 +34,7 @@ class AssSubtitleParserFactory(private val assHandler: AssHandler): SubtitlePars
                 .contentEquals(format.containerMimeType)
             val track = assHandler.createTrack(format)
             if (embeddedSubtitles) {
-                if (assHandler.renderType != AssRenderType.LEGACY) {
+                if (assHandler.renderType != AssRenderType.CUES) {
                     AssNoOpSubtitleParser()
                 } else {
                     AssSegmentSubtitleParser(assHandler, track)

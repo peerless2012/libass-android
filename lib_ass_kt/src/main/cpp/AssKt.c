@@ -9,6 +9,8 @@
 #include <jni.h>
 #include "ass/ass.h"
 #include "fontconfig/fontconfig.h"
+#include "GLES2/gl2.h"
+#include "GLES2/gl2ext.h"
 
 #define LOG_TAG "SubtitleRenderer"
 
@@ -265,6 +267,24 @@ jobject createAlphaBitmap(JNIEnv* env, const ASS_Image* image) {
     return bitmap;
 }
 
+jint createTexture(JNIEnv* env, const ASS_Image* image) {
+    GLuint texture;
+    glGenTextures(1, &texture);
+    if (texture <= 0) return 0;
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, image->stride);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, image->w, image->h, 0, GL_ALPHA, GL_UNSIGNED_BYTE, image->bitmap);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return texture;
+}
+
 static int count_ass_images(ASS_Image *images) {
     int count = 0;
     for (ASS_Image *img = images; img != NULL; img = img->next) {
@@ -273,7 +293,7 @@ static int count_ass_images(ASS_Image *images) {
     return count;
 }
 
-jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time, jboolean onlyAlpha) {
+jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time, jint type) {
     int changed;
     ASS_Image *image = ass_render_frame((ASS_Renderer *) render, (ASS_Track *) track, time, &changed);
     if (image == NULL) {
@@ -289,7 +309,7 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
 
     int size = count_ass_images(image);
     jclass assTexClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssTex");
-    jmethodID assTexConstructor = (*env)->GetMethodID(env, assTexClass, "<init>", "(IIILandroid/graphics/Bitmap;)V");
+    jmethodID assTexConstructor = (*env)->GetMethodID(env, assTexClass, "<init>", "(IIIIILandroid/graphics/Bitmap;I)V");
 
     jobjectArray assTexArr = (*env)->NewObjectArray(env, size, assTexClass, NULL);
     if (assTexArr == NULL) {
@@ -299,13 +319,18 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
     int index = 0;
     for (ASS_Image *img = image; img != NULL; img = img->next) {
         jobject bitmap = NULL;
+        jint tex = 0;
         if (img->w > 0 && img->h > 0) {
-            bitmap = onlyAlpha ? createAlphaBitmap(env, img) : createBitmap(env, img);
+            if (type == 0) {
+                bitmap = createBitmap(env, img);
+            } else if (type == 1) {
+                bitmap = createAlphaBitmap(env, img);
+            } else if (type == 2) {
+               tex = createTexture(env, img);
+            }
         }
         int32_t color = (int32_t) img->color;
-
-        jobject assTexObject = (*env)->NewObject(env, assTexClass, assTexConstructor, img->dst_x, img->dst_y, color, bitmap);
-
+        jobject assTexObject = (*env)->NewObject(env, assTexClass, assTexConstructor, img->dst_x, img->dst_y, img->w, img->h, color, bitmap, tex);
         (*env)->SetObjectArrayElement(env, assTexArr, index, assTexObject);
         (*env)->DeleteLocalRef(env, assTexObject);
         if (bitmap != NULL) {
@@ -329,7 +354,7 @@ static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderSetCacheLimit", "(JII)V", (void*)nativeAssRenderSetCacheLimit},
         {"nativeAssRenderSetStorageSize", "(JII)V", (void*) nativeAssRenderSetStorageSize},
         {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
-        {"nativeAssRenderFrame", "(JJJZ)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
+        {"nativeAssRenderFrame", "(JJJI)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
         {"nativeAssRenderDeinit", "(J)V", (void*)nativeAssRenderDeinit},
 };
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {

@@ -9,4 +9,4 @@ import android.graphics.Bitmap
  * @Version V1.0
  * @Description
  */
-data class AssTex(val x: Int, val y: Int, val color: Int, val bitmap: Bitmap? = null)
+data class AssTex(val x: Int, val y: Int, val w: Int, val h: Int, val color: Int, val bitmap: Bitmap? = null, val tex: Int = 0)
