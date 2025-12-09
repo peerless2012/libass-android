@@ -8,6 +8,7 @@ import android.graphics.PorterDuffXfermode
 import android.util.AttributeSet
 import android.view.View
 import io.github.peerless2012.ass.AssFrame
+import io.github.peerless2012.ass.AssTexType
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.executor.AssExecutor
 
@@ -78,7 +79,7 @@ class AssSubtitleCanvasView : View, AssSubtitleRender {
     }
 
     override fun requestRender(timestampNanos: Long) {
-        assExecutor?.asyncRenderFrame(timestampNanos, assRenderCallback)
+        assExecutor?.asyncRenderFrame(timestampNanos, AssTexType.BITMAP_ALPHA, assRenderCallback)
     }
 
     override fun onDraw(canvas: Canvas) {

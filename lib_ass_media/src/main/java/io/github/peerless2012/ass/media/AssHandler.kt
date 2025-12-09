@@ -160,7 +160,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         this.track = track
         val render = requireNotNull(render)
         render.setStorageSize(videoSize.width, videoSize.height)
-        if (renderType == AssRenderType.OVERLAY_CANVAS) {
+        if (renderType == AssRenderType.OVERLAY_CANVAS || renderType == AssRenderType.OVERLAY_OPEN_GL) {
             render.setFrameSize(surfaceSize.width, surfaceSize.height)
         } else {
             render.setFrameSize(videoSize.width, videoSize.height)
@@ -184,7 +184,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         Log.i("AssHandler", "onSurfaceSizeChanged: width = $width, height = $height")
         if (surfaceSize.width == width && surfaceSize.height == height) return
         surfaceSize = Size(width, height)
-        if (renderType == AssRenderType.OVERLAY_CANVAS && surfaceSize.isValid) {
+        if ((renderType == AssRenderType.OVERLAY_CANVAS || renderType == AssRenderType.OVERLAY_OPEN_GL) && surfaceSize.isValid) {
             render?.setFrameSize(surfaceSize.width, surfaceSize.height)
         }
     }
@@ -250,7 +250,7 @@ class AssHandler(val renderType: AssRenderType) : Listener {
             if (videoSize.isValid) {
                 render.setFrameSize(videoSize.width, videoSize.height)
             }
-            if (renderType == AssRenderType.OVERLAY_CANVAS) {
+            if (renderType == AssRenderType.OVERLAY_CANVAS || renderType == AssRenderType.OVERLAY_OPEN_GL) {
                 if (surfaceSize.isValid) {
                     render.setFrameSize(surfaceSize.width, surfaceSize.height)
                 }

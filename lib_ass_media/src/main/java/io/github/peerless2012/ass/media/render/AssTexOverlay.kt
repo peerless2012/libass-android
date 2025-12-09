@@ -8,6 +8,7 @@ import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.TextureOverlay
 import io.github.peerless2012.ass.AssRender
+import io.github.peerless2012.ass.AssTexType
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.executor.AssExecutor
 import java.nio.ByteBuffer
@@ -83,7 +84,7 @@ class AssTexOverlay(private val handler: AssHandler, private val render: AssRend
         } else {
             presentationTimeUs
         }
-        val assFrame = executor.renderFrame(timeUs)
+        val assFrame = executor.renderFrame(timeUs, AssTexType.BITMAP_ALPHA)
 
         // if content not change, just return the tex
         if (assFrame != null && assFrame.changed == 0) {

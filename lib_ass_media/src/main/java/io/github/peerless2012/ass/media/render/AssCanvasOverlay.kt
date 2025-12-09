@@ -11,6 +11,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.CanvasOverlay
 import io.github.peerless2012.ass.AssFrame
 import io.github.peerless2012.ass.AssRender
+import io.github.peerless2012.ass.AssTexType
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.executor.AssExecutor
 
@@ -37,7 +38,7 @@ class AssCanvasOverlay(private val handler: AssHandler, private val render: AssR
         } else {
             presentationTimeUs
         }
-        val assFrame: AssFrame? = executor.renderFrame(timeUs)
+        val assFrame: AssFrame? = executor.renderFrame(timeUs, AssTexType.BITMAP_ALPHA)
 
         if (assFrame != null && assFrame.changed == 0) {
             return
