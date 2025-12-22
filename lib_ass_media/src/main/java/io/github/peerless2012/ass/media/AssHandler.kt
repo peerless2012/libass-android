@@ -147,8 +147,8 @@ class AssHandler(val renderType: AssRenderType) : Listener {
         val track = availableTracks.firstNotNullOfOrNull {
             // When media without external subtitles, format id will not change.
             // When media with external subtitles, format will become like 1:1 .
-            // So to compat both situation, we just use endsWith.
-            if (format?.id?.endsWith(it.key) == true) {
+            // So to compat both situation, we extract the actual id after the colon.
+            if (format?.id?.substringAfter(":") == it.key) {
                 it.value
             } else {
                 null
