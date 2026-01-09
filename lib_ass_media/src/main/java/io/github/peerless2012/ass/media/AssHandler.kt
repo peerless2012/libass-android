@@ -260,10 +260,12 @@ class AssHandler(val renderType: AssRenderType) : Listener {
                 }
             }
             val totalMemoryBytes = Runtime.getRuntime().maxMemory()
-            val cacheSize = ((totalMemoryBytes / (1024 * 1024)) / 4).toInt()
+            val glyphSize = 10000
+            val cacheSize = 128 //((totalMemoryBytes / (1024 * 1024)) / 4).toInt()
             Log.i("AssHandler", "Ass cacheSize: ${cacheSize}MB")
+            Log.i("AssHandler", "Ass glyphSize: ${glyphSize}")
             // https://github.com/peerless2012/libass-android/issues/48#issuecomment-3086561167
-            render.setCacheLimit(1024, cacheSize)
+            render.setCacheLimit(glyphSize, cacheSize)
         }
         renderCallback?.invoke(render)
     }
