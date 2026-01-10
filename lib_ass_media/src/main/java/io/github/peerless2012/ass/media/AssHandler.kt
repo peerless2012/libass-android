@@ -28,7 +28,10 @@ import io.github.peerless2012.ass.media.type.AssRenderType
  * @param renderType The subtitle render type.
  */
 @OptIn(UnstableApi::class)
-class AssHandler(val renderType: AssRenderType) : Listener {
+class AssHandler(
+    val renderType: AssRenderType,
+    val config: AssHandlerConfig = AssHandlerConfig()
+    ) : Listener {
 
     /** The ASS instance used for creating tracks and renderers. This is lazy to avoid loading
      * libass if the played media does not have ASS tracks. */
@@ -259,13 +262,9 @@ class AssHandler(val renderType: AssRenderType) : Listener {
                     render.setFrameSize(videoSize.width, videoSize.height)
                 }
             }
-            val totalMemoryBytes = Runtime.getRuntime().maxMemory()
-            val glyphSize = 10000
-            val cacheSize = 128 //((totalMemoryBytes / (1024 * 1024)) / 4).toInt()
-            Log.i("AssHandler", "Ass cacheSize: ${cacheSize}MB")
-            Log.i("AssHandler", "Ass glyphSize: ${glyphSize}")
-            // https://github.com/peerless2012/libass-android/issues/48#issuecomment-3086561167
-            render.setCacheLimit(glyphSize, cacheSize)
+            Log.i("AssHandler", "Ass cacheSize: ${config.cacheSize}MB")
+            Log.i("AssHandler", "Ass glyphSize: ${config.glyphSize}")
+            render.setCacheLimit(config.glyphSize, config.cacheSize)
         }
         renderCallback?.invoke(render)
     }
