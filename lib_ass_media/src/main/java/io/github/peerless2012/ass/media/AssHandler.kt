@@ -53,6 +53,9 @@ class AssHandler(
     /** The available ASS tracks in the current media. */
     private val availableTracks = mutableMapOf<String, AssTrack>()
 
+    /** Fonts encountered before any ASS track was created. Flushed in [createTrack]. */
+    private val pendingFonts = mutableListOf<Pair<String, ByteArray>>()
+
     /** The size of the video track. */
     var videoSize = Size.ZERO
         private set
@@ -114,6 +117,7 @@ class AssHandler(
         render = null
         track = null
         availableTracks.clear()
+        pendingFonts.clear()
         videoSize = Size.ZERO
         videoTime = -1
         videoFrameIndex = 0
@@ -217,6 +221,19 @@ class AssHandler(
     }
 
     /**
+     * Adds a font to the ASS library. If no tracks have been created yet, the font is buffered
+     * and will be added when the first track is created via [createTrack].
+     */
+    @Synchronized
+    fun addFont(name: String, data: ByteArray) {
+        if (hasTracks()) {
+            ass.addFont(name, data)
+        } else {
+            pendingFonts.add(name to data)
+        }
+    }
+
+    /**
      * Creates a new ASS track from the given format and saves it in the [availableTracks].
      * The renderer and libass are also created if needed.
      * @param format The format of the ASS track.
@@ -227,6 +244,14 @@ class AssHandler(
         Log.i("AssHandler", "createTrack: format = $format")
         // Ensure the renderer is created before creating tracks.
         createRenderIfNeeded()
+
+        // Flush any fonts that were buffered before the first track was created.
+        if (pendingFonts.isNotEmpty()) {
+            for ((name, data) in pendingFonts) {
+                ass.addFont(name, data)
+            }
+            pendingFonts.clear()
+        }
 
         val track = ass.createTrack()
         if (format.initializationData.size > 0) {
