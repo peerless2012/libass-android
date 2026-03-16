@@ -274,7 +274,7 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
             // enable blend
             GLES20.glEnable(GLES20.GL_BLEND);
             // set blend mode
-            GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+            GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         }
 
         override fun onSurfaceChanged(width: Int, height: Int) {

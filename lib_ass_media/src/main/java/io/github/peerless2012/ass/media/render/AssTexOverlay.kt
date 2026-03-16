@@ -115,7 +115,7 @@ class AssTexOverlay(private val handler: AssHandler, private val render: AssRend
         // enable blend
         GLES20.glEnable(GLES20.GL_BLEND);
         // set blend mode
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
         // render each frame
         assFrame?.images?.let { frames ->
