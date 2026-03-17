@@ -15,8 +15,9 @@ import io.github.peerless2012.ass.media.type.AssRenderType
 @OptIn(UnstableApi::class)
 class AssMatroskaExtractor(
     subtitleParserFactory: SubtitleParser.Factory,
-    private val assHandler: AssHandler
-) : MatroskaExtractor(subtitleParserFactory) {
+    private val assHandler: AssHandler,
+    flags: Int = 0
+) : MatroskaExtractor(subtitleParserFactory, flags) {
 
     private var currentAttachmentName: String? = null
     private var currentAttachmentMime: String? = null
