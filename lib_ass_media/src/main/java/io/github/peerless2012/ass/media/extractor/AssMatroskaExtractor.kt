@@ -13,7 +13,7 @@ import io.github.peerless2012.ass.media.text.AssSubtitleExtractorOutput
 import io.github.peerless2012.ass.media.type.AssRenderType
 
 @OptIn(UnstableApi::class)
-class AssMatroskaExtractor(
+open class AssMatroskaExtractor(
     subtitleParserFactory: SubtitleParser.Factory,
     private val assHandler: AssHandler,
     flags: Int = 0
