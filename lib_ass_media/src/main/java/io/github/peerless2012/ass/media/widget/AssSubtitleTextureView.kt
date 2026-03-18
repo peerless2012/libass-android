@@ -112,6 +112,7 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
         private var eglDisplay: EGLDisplay = EGL14.EGL_NO_DISPLAY
         private var eglContext: EGLContext = EGL14.EGL_NO_CONTEXT
         private var eglSurface: EGLSurface = EGL14.EGL_NO_SURFACE
+        private var lastDrawTimestampNanos: Long = 0L
 
         override fun start() {
             super.start()
@@ -126,6 +127,7 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
 
         fun onSurfaceSizeChanged(width: Int, height: Int) {
             this.width = width
+            this.height = height
             handler.sendEmptyMessage(MSG_SURFACE_SIZE_CHANGED)
         }
 
@@ -164,9 +166,17 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
 
         private fun sizeChangedInternal(width: Int, height: Int) {
             render.onSurfaceChanged(width, height)
+            if (eglDisplay != EGL14.EGL_NO_DISPLAY) {
+                GlUtil.clearFocusedBuffers()
+                EGL14.eglSwapBuffers(eglDisplay, eglSurface)
+            }
+            if (lastDrawTimestampNanos != 0L) {
+                drawInternal(lastDrawTimestampNanos)
+            }
         }
 
         private fun drawInternal(timestampNanos: Long) {
+            lastDrawTimestampNanos = timestampNanos
             if (eglDisplay == EGL14.EGL_NO_DISPLAY) return
             if (render.onDrawFrame(timestampNanos)) {
                 EGL14.eglSwapBuffers(eglDisplay, eglSurface)
@@ -232,6 +242,8 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
 
         private var surfaceDirty = true
 
+        private var forceNextRender = false
+
         private var surfaceSize = Size.ZERO
 
         private lateinit var glProgram: GlProgram
@@ -281,13 +293,16 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
             surfaceSize = Size(width, height)
             assHandler.render?.setFrameSize(width, height)
             GLES20.glViewport(0, 0, width, height)
+            forceNextRender = true
         }
 
         override fun onDrawFrame(timestampNanos: Long): Boolean {
             val assFrame = assHandler.render?.renderFrame(timestampNanos / 1000, AssTexType.TEXTURE)
 
             // if content not change, just return the tex
-            if (assFrame != null && assFrame.changed == 0) {
+            val force = forceNextRender
+            forceNextRender = false
+            if (assFrame != null && assFrame.changed == 0 && !force) {
                 return false
             }
 

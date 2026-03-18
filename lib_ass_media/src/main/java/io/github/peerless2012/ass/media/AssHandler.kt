@@ -191,9 +191,6 @@ class AssHandler(
         Log.i("AssHandler", "onSurfaceSizeChanged: width = $width, height = $height")
         if (surfaceSize.width == width && surfaceSize.height == height) return
         surfaceSize = Size(width, height)
-        if ((renderType == AssRenderType.OVERLAY_CANVAS || renderType == AssRenderType.OVERLAY_OPEN_GL) && surfaceSize.isValid) {
-            render?.setFrameSize(surfaceSize.width, surfaceSize.height)
-        }
     }
 
     override fun onVideoSizeChanged(videoSize: VideoSize) {
