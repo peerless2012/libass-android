@@ -36,34 +36,54 @@ class AssTrack(private val ass: Long) {
         external fun nativeAssTrackDeinit(track: Long)
     }
 
-    public val nativeAssTrack = nativeAssTrackInit(ass)
+    var nativeAssTrack = nativeAssTrackInit(ass)
+        private set
+
+    @Volatile
+    var released = false
+        private set
 
     public fun getWidth(): Int {
+        if (released || nativeAssTrack == 0L) return 0
         return nativeAssTrackGetWidth(nativeAssTrack)
     }
 
     public fun getHeight(): Int {
+        if (released || nativeAssTrack == 0L) return 0
         return nativeAssTrackGetHeight(nativeAssTrack)
     }
 
     public fun getEvents(): Array<AssEvent>? {
+        if (released || nativeAssTrack == 0L) return null
         return nativeAssTrackGetEvents(nativeAssTrack)
     }
 
     public fun clearEvent() {
+        if (released || nativeAssTrack == 0L) return
         nativeAssTrackClearEvents(nativeAssTrack)
     }
 
     public fun readBuffer(array: ByteArray, offset: Int = 0, length : Int = array.size) {
+        if (released || nativeAssTrack == 0L) return
         nativeAssTrackReadBuffer(nativeAssTrack, array, offset, length)
     }
 
     public fun readChunk(start: Long, duration: Long, array: ByteArray, offset: Int = 0, length: Int = array.size) {
+        if (released || nativeAssTrack == 0L) return
         nativeAssTrackReadChunk(nativeAssTrack, start, duration, array, offset, length)
     }
 
+    fun release() {
+        if (released) return
+        released = true
+        if (nativeAssTrack != 0L) {
+            nativeAssTrackDeinit(nativeAssTrack)
+            nativeAssTrack = 0
+        }
+    }
+
     protected fun finalize() {
-        nativeAssTrackDeinit(nativeAssTrack)
+        release()
     }
 
 }

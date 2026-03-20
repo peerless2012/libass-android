@@ -69,10 +69,12 @@ jlong nativeAssTrackInit(JNIEnv* env, jclass clazz, jlong ass) {
 }
 
 jint nativeAssTrackGetWidth(JNIEnv* env, jclass clazz, jlong track) {
+    if (!track) return 0;
     return ((ASS_Track *) track)->PlayResX;
 }
 
 jobjectArray nativeAssTrackGetEvents(JNIEnv* env, jclass clazz, jlong track) {
+    if (!track) return NULL;
     jclass eventClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssEvent");
     if (eventClass == NULL) {
         return NULL;
@@ -121,6 +123,7 @@ jobjectArray nativeAssTrackGetEvents(JNIEnv* env, jclass clazz, jlong track) {
 }
 
 void nativeAssTrackClearEvents(JNIEnv* env, jclass clazz, jlong track) {
+    if (!track) return;
     ASS_Track* tr = (ASS_Track *) track;
     for (int i = 0; i < tr->n_events; i++) {
         ass_free_event(tr, i);
@@ -129,10 +132,12 @@ void nativeAssTrackClearEvents(JNIEnv* env, jclass clazz, jlong track) {
 }
 
 jint nativeAssTrackGetHeight(JNIEnv* env, jclass clazz, jlong track) {
+    if (!track) return 0;
     return ((ASS_Track *) track)->PlayResY;
 }
 
 void nativeAssTrackReadBuffer(JNIEnv* env, jclass clazz, jlong track, jbyteArray buffer, jint offset, jint length) {
+    if (!track) return;
     jboolean isCopy;
     jbyte* elements = (*env)->GetByteArrayElements(env, buffer, &isCopy);
     if (elements == NULL) {
@@ -143,6 +148,7 @@ void nativeAssTrackReadBuffer(JNIEnv* env, jclass clazz, jlong track, jbyteArray
 }
 
 void nativeAssTrackReadChunk(JNIEnv* env, jclass clazz, jlong track, jlong start, jlong duration, jbyteArray buffer, jint offset, jint length) {
+    if (!track) return;
     jboolean isCopy;
     jbyte* elements = (*env)->GetByteArrayElements(env, buffer, &isCopy);
     if (elements == NULL) {
@@ -153,6 +159,7 @@ void nativeAssTrackReadChunk(JNIEnv* env, jclass clazz, jlong track, jlong start
 }
 
 void nativeAssTrackDeinit(JNIEnv* env, jclass clazz, jlong track) {
+    if (!track) return;
     ass_free_track((ASS_Track *) track);
 }
 
@@ -175,18 +182,22 @@ jlong nativeAssRenderInit(JNIEnv* env, jclass clazz, jlong ass) {
 }
 
 void nativeAssRenderSetFontScale(JNIEnv* env, jclass clazz, jlong render, jfloat scale) {
+    if (!render) return;
     ass_set_font_scale((ASS_Renderer *) render, scale);
 }
 
 void nativeAssRenderSetCacheLimit(JNIEnv* env, jclass clazz, jlong render, jint glyphMax, jint bitmapMaxSize) {
+    if (!render) return;
     ass_set_cache_limits((ASS_Renderer *) render, glyphMax, bitmapMaxSize);
 }
 
 void nativeAssRenderSetFrameSize(JNIEnv* env, jclass clazz, jlong render, jint width, jint height) {
+    if (!render) return;
     ass_set_frame_size((ASS_Renderer *) render, width, height);
 }
 
 void nativeAssRenderSetStorageSize(JNIEnv* env, jclass clazz, jlong render, jint width, jint height) {
+    if (!render) return;
     ass_set_storage_size((ASS_Renderer *) render, width, height);
 }
 
@@ -294,6 +305,7 @@ static int count_ass_images(ASS_Image *images) {
 }
 
 jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time, jint type) {
+    if (!render || !track) return NULL;
     int changed;
     ASS_Image *image = ass_render_frame((ASS_Renderer *) render, (ASS_Track *) track, time, &changed);
     if (image == NULL) {

@@ -29,26 +29,43 @@ class Ass {
 
     }
 
-    private val nativeAss: Long = nativeAssInit()
+    private var nativeAss: Long = nativeAssInit()
+
+    @Volatile
+    var released = false
+        private set
 
     public fun createTrack(): AssTrack {
+        if (released || nativeAss == 0L) throw IllegalStateException("Ass already released")
         return AssTrack(nativeAss)
     }
 
     public fun createRender(): AssRender {
+        if (released || nativeAss == 0L) throw IllegalStateException("Ass already released")
         return AssRender(nativeAss)
     }
 
     public fun addFont(name: String, buffer: ByteArray) {
+        if (released || nativeAss == 0L) return
         nativeAssAddFont(nativeAss, name, buffer)
     }
 
     public fun clearFont() {
+        if (released || nativeAss == 0L) return
         nativeAssClearFont(nativeAss)
     }
 
+    fun release() {
+        if (released) return
+        released = true
+        if (nativeAss != 0L) {
+            nativeAssDeinit(nativeAss)
+            nativeAss = 0
+        }
+    }
+
     protected fun finalize() {
-        nativeAssDeinit(nativeAss)
+        release()
     }
 
 }

@@ -19,6 +19,7 @@ import io.github.peerless2012.ass.Ass
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssOverlayManager
 import io.github.peerless2012.ass.media.type.AssRenderType
+import kotlin.concurrent.withLock
 
 /**
  * Handles ASS subtitle rendering and integration with ExoPlayer.
@@ -35,7 +36,8 @@ class AssHandler(
 
     /** The ASS instance used for creating tracks and renderers. This is lazy to avoid loading
      * libass if the played media does not have ASS tracks. */
-    val ass by lazy { Ass() }
+    private val assDelegate = lazy { Ass() }
+    val ass by assDelegate
 
     /** The current ASS renderer. It's created as soon as a ASS track is detected. */
     var render: AssRender? = null
@@ -296,7 +298,8 @@ class AssHandler(
 
     /**
      * Reads a dialogue into the track of the given [trackId].
-     * TODO This should move to executor.
+     * Synchronized with renderFrame via the render lock to prevent concurrent
+     * ass_process_chunk / ass_render_frame on the same track.
      */
     fun readTrackDialogue(
         trackId: String?,
@@ -306,7 +309,15 @@ class AssHandler(
         offset: Int = 0,
         length: Int = data.size
     ) {
-        availableTracks[trackId]?.readChunk(start, duration, data, offset, length)
+        val t = availableTracks[trackId] ?: return
+        val r = render
+        if (r != null) {
+            r.lock.withLock {
+                t.readChunk(start, duration, data, offset, length)
+            }
+        } else {
+            t.readChunk(start, duration, data, offset, length)
+        }
     }
 
     /**
@@ -341,6 +352,23 @@ class AssHandler(
                 false
             }
         }?.getTrackFormat(0)
+    }
+
+    /**
+     * Releases all native resources held by this handler.
+     */
+    fun release() {
+        videoTimeCallback = null
+        overlayManager?.disable()
+        render?.release()
+        render = null
+        availableTracks.values.forEach { it.release() }
+        availableTracks.clear()
+        track = null
+        pendingFonts.clear()
+        if (assDelegate.isInitialized()) {
+            ass.release()
+        }
     }
 
     /**
