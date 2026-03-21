@@ -10,7 +10,7 @@ import kotlin.concurrent.withLock
  * @Version V1.0
  * @Description
  */
-class AssRender(nativeAss: Long) {
+class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
 
     companion object {
 
@@ -36,8 +36,6 @@ class AssRender(nativeAss: Long) {
         external fun nativeAssRenderDeinit(render: Long)
     }
 
-    val lock = ReentrantLock()
-
     private var nativeRender: Long = nativeAssRenderInit(nativeAss)
 
     @Volatile
@@ -53,23 +51,31 @@ class AssRender(nativeAss: Long) {
     }
 
     public fun setFontScale(scale: Float) {
-        if (released || nativeRender == 0L) return
-        nativeAssRenderSetFontScale(nativeRender, scale)
+        lock.withLock {
+            if (released || nativeRender == 0L) return
+            nativeAssRenderSetFontScale(nativeRender, scale)
+        }
     }
 
     public fun setCacheLimit(glyphMax: Int, bitmapMaxSize: Int) {
-        if (released || nativeRender == 0L) return
-        nativeAssRenderSetCacheLimit(nativeRender, glyphMax, bitmapMaxSize)
+        lock.withLock {
+            if (released || nativeRender == 0L) return
+            nativeAssRenderSetCacheLimit(nativeRender, glyphMax, bitmapMaxSize)
+        }
     }
 
     public fun setStorageSize(width: Int, height: Int) {
-        if (released || nativeRender == 0L) return
-        nativeAssRenderSetStorageSize(nativeRender, width, height)
+        lock.withLock {
+            if (released || nativeRender == 0L) return
+            nativeAssRenderSetStorageSize(nativeRender, width, height)
+        }
     }
 
     public fun setFrameSize(width: Int, height: Int) {
-        if (released || nativeRender == 0L) return
-        nativeAssRenderSetFrameSize(nativeRender, width, height)
+        lock.withLock {
+            if (released || nativeRender == 0L) return
+            nativeAssRenderSetFrameSize(nativeRender, width, height)
+        }
     }
 
     public fun renderFrame(time: Long, type: AssTexType): AssFrame? {

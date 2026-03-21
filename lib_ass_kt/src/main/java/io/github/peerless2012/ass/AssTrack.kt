@@ -1,5 +1,8 @@
 package io.github.peerless2012.ass
 
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+
 /**
  * @Author peerless2012
  * @Email peerless2012@126.com
@@ -7,7 +10,7 @@ package io.github.peerless2012.ass
  * @Version V1.0
  * @Description
  */
-class AssTrack(private val ass: Long) {
+class AssTrack(private val ass: Long, private val lock: ReentrantLock) {
 
     companion object {
 
@@ -44,41 +47,55 @@ class AssTrack(private val ass: Long) {
         private set
 
     public fun getWidth(): Int {
-        if (released || nativeAssTrack == 0L) return 0
-        return nativeAssTrackGetWidth(nativeAssTrack)
+        lock.withLock {
+            if (released || nativeAssTrack == 0L) return 0
+            return nativeAssTrackGetWidth(nativeAssTrack)
+        }
     }
 
     public fun getHeight(): Int {
-        if (released || nativeAssTrack == 0L) return 0
-        return nativeAssTrackGetHeight(nativeAssTrack)
+        lock.withLock {
+            if (released || nativeAssTrack == 0L) return 0
+            return nativeAssTrackGetHeight(nativeAssTrack)
+        }
     }
 
     public fun getEvents(): Array<AssEvent>? {
-        if (released || nativeAssTrack == 0L) return null
-        return nativeAssTrackGetEvents(nativeAssTrack)
+        lock.withLock {
+            if (released || nativeAssTrack == 0L) return null
+            return nativeAssTrackGetEvents(nativeAssTrack)
+        }
     }
 
     public fun clearEvent() {
-        if (released || nativeAssTrack == 0L) return
-        nativeAssTrackClearEvents(nativeAssTrack)
+        lock.withLock {
+            if (released || nativeAssTrack == 0L) return
+            nativeAssTrackClearEvents(nativeAssTrack)
+        }
     }
 
     public fun readBuffer(array: ByteArray, offset: Int = 0, length : Int = array.size) {
-        if (released || nativeAssTrack == 0L) return
-        nativeAssTrackReadBuffer(nativeAssTrack, array, offset, length)
+        lock.withLock {
+            if (released || nativeAssTrack == 0L) return
+            nativeAssTrackReadBuffer(nativeAssTrack, array, offset, length)
+        }
     }
 
     public fun readChunk(start: Long, duration: Long, array: ByteArray, offset: Int = 0, length: Int = array.size) {
-        if (released || nativeAssTrack == 0L) return
-        nativeAssTrackReadChunk(nativeAssTrack, start, duration, array, offset, length)
+        lock.withLock {
+            if (released || nativeAssTrack == 0L) return
+            nativeAssTrackReadChunk(nativeAssTrack, start, duration, array, offset, length)
+        }
     }
 
     fun release() {
-        if (released) return
-        released = true
-        if (nativeAssTrack != 0L) {
-            nativeAssTrackDeinit(nativeAssTrack)
-            nativeAssTrack = 0
+        lock.withLock {
+            if (released) return
+            released = true
+            if (nativeAssTrack != 0L) {
+                nativeAssTrackDeinit(nativeAssTrack)
+                nativeAssTrack = 0
+            }
         }
     }
 

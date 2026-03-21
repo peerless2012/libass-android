@@ -19,7 +19,6 @@ import io.github.peerless2012.ass.Ass
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssOverlayManager
 import io.github.peerless2012.ass.media.type.AssRenderType
-import kotlin.concurrent.withLock
 
 /**
  * Handles ASS subtitle rendering and integration with ExoPlayer.
@@ -298,8 +297,7 @@ class AssHandler(
 
     /**
      * Reads a dialogue into the track of the given [trackId].
-     * Synchronized with renderFrame via the render lock to prevent concurrent
-     * ass_process_chunk / ass_render_frame on the same track.
+     * Thread-safe: AssTrack.readChunk internally acquires the shared libass lock.
      */
     fun readTrackDialogue(
         trackId: String?,
@@ -310,14 +308,7 @@ class AssHandler(
         length: Int = data.size
     ) {
         val t = availableTracks[trackId] ?: return
-        val r = render
-        if (r != null) {
-            r.lock.withLock {
-                t.readChunk(start, duration, data, offset, length)
-            }
-        } else {
-            t.readChunk(start, duration, data, offset, length)
-        }
+        t.readChunk(start, duration, data, offset, length)
     }
 
     /**
