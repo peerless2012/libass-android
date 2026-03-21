@@ -1,5 +1,8 @@
 package io.github.peerless2012.ass
 
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+
 /**
  * @Author peerless2012
  * @Email peerless2012@126.com
@@ -7,7 +10,7 @@ package io.github.peerless2012.ass
  * @Version V1.0
  * @Description
  */
-class AssRender(nativeAss: Long) {
+class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
 
     companion object {
 
@@ -33,36 +36,71 @@ class AssRender(nativeAss: Long) {
         external fun nativeAssRenderDeinit(render: Long)
     }
 
-    private val nativeRender: Long = nativeAssRenderInit(nativeAss)
+    private var nativeRender: Long = nativeAssRenderInit(nativeAss)
+
+    @Volatile
+    var released = false
+        private set
 
     private var track: AssTrack? = null
 
     public fun setTrack(track: AssTrack?) {
-        this.track = track
+        lock.withLock {
+            this.track = track
+        }
     }
 
     public fun setFontScale(scale: Float) {
-        nativeAssRenderSetFontScale(nativeRender, scale)
+        lock.withLock {
+            if (released || nativeRender == 0L) return
+            nativeAssRenderSetFontScale(nativeRender, scale)
+        }
     }
 
     public fun setCacheLimit(glyphMax: Int, bitmapMaxSize: Int) {
-        nativeAssRenderSetCacheLimit(nativeRender, glyphMax, bitmapMaxSize)
+        lock.withLock {
+            if (released || nativeRender == 0L) return
+            nativeAssRenderSetCacheLimit(nativeRender, glyphMax, bitmapMaxSize)
+        }
     }
 
     public fun setStorageSize(width: Int, height: Int) {
-        nativeAssRenderSetStorageSize(nativeRender, width, height)
+        lock.withLock {
+            if (released || nativeRender == 0L) return
+            nativeAssRenderSetStorageSize(nativeRender, width, height)
+        }
     }
 
     public fun setFrameSize(width: Int, height: Int) {
-        nativeAssRenderSetFrameSize(nativeRender, width, height)
+        lock.withLock {
+            if (released || nativeRender == 0L) return
+            nativeAssRenderSetFrameSize(nativeRender, width, height)
+        }
     }
 
     public fun renderFrame(time: Long, type: AssTexType): AssFrame? {
-        return track?.let { nativeAssRenderFrame(nativeRender, it.nativeAssTrack, time, type.ordinal) }
+        lock.withLock {
+            if (released || nativeRender == 0L) return null
+            val t = track ?: return null
+            if (t.released || t.nativeAssTrack == 0L) return null
+            return nativeAssRenderFrame(nativeRender, t.nativeAssTrack, time, type.ordinal)
+        }
+    }
+
+    fun release() {
+        lock.withLock {
+            if (released) return
+            released = true
+            track = null
+            if (nativeRender != 0L) {
+                nativeAssRenderDeinit(nativeRender)
+                nativeRender = 0
+            }
+        }
     }
 
     protected fun finalize() {
-        nativeAssRenderDeinit(nativeRender)
+        release()
     }
 
 }
