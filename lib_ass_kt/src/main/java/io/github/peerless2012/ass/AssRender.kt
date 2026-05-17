@@ -7,33 +7,33 @@ package io.github.peerless2012.ass
  * @Version V1.0
  * @Description
  */
-class AssRender(nativeAss: Long) {
+class AssRender(private val ctx: AssContext, nativeAss: Long) {
 
     companion object {
 
         @JvmStatic
-        external fun nativeAssRenderInit(ass: Long): Long
+        external fun nativeAssRenderInit(ctx: Long, ass: Long): Long
 
         @JvmStatic
-        external fun nativeAssRenderSetFontScale(render: Long, scale: Float)
+        external fun nativeAssRenderSetFontScale(ctx: Long, render: Long, scale: Float)
 
         @JvmStatic
-        external fun nativeAssRenderSetCacheLimit(render: Long, glyphMax: Int, bitmapMaxSize: Int)
+        external fun nativeAssRenderSetCacheLimit(ctx: Long, render: Long, glyphMax: Int, bitmapMaxSize: Int)
 
         @JvmStatic
-        external fun nativeAssRenderSetStorageSize(render: Long, width: Int, height: Int)
+        external fun nativeAssRenderSetStorageSize(ctx: Long, render: Long, width: Int, height: Int)
 
         @JvmStatic
-        external fun nativeAssRenderSetFrameSize(render: Long, width: Int, height: Int)
+        external fun nativeAssRenderSetFrameSize(ctx: Long, render: Long, width: Int, height: Int)
 
         @JvmStatic
-        external fun nativeAssRenderFrame(render: Long, track: Long, time: Long, type: Int): AssFrame?
+        external fun nativeAssRenderFrame(ctx: Long, render: Long, track: Long, time: Long, type: Int): AssFrame?
 
         @JvmStatic
-        external fun nativeAssRenderDeinit(render: Long)
+        external fun nativeAssRenderDeinit(ctx: Long, render: Long)
     }
 
-    private val nativeRender: Long = nativeAssRenderInit(nativeAss)
+    private val nativeRender: Long = nativeAssRenderInit(ctx.nativeCtx, nativeAss)
 
     private var track: AssTrack? = null
 
@@ -42,27 +42,27 @@ class AssRender(nativeAss: Long) {
     }
 
     public fun setFontScale(scale: Float) {
-        nativeAssRenderSetFontScale(nativeRender, scale)
+        nativeAssRenderSetFontScale(ctx.nativeCtx, nativeRender, scale)
     }
 
     public fun setCacheLimit(glyphMax: Int, bitmapMaxSize: Int) {
-        nativeAssRenderSetCacheLimit(nativeRender, glyphMax, bitmapMaxSize)
+        nativeAssRenderSetCacheLimit(ctx.nativeCtx, nativeRender, glyphMax, bitmapMaxSize)
     }
 
     public fun setStorageSize(width: Int, height: Int) {
-        nativeAssRenderSetStorageSize(nativeRender, width, height)
+        nativeAssRenderSetStorageSize(ctx.nativeCtx, nativeRender, width, height)
     }
 
     public fun setFrameSize(width: Int, height: Int) {
-        nativeAssRenderSetFrameSize(nativeRender, width, height)
+        nativeAssRenderSetFrameSize(ctx.nativeCtx, nativeRender, width, height)
     }
 
     public fun renderFrame(time: Long, type: AssTexType): AssFrame? {
-        return track?.let { nativeAssRenderFrame(nativeRender, it.nativeAssTrack, time, type.ordinal) }
+        return track?.let { nativeAssRenderFrame(ctx.nativeCtx, nativeRender, it.nativeAssTrack, time, type.ordinal) }
     }
 
     protected fun finalize() {
-        nativeAssRenderDeinit(nativeRender)
+        nativeAssRenderDeinit(ctx.nativeCtx, nativeRender)
     }
 
 }

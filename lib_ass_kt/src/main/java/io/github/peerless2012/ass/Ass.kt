@@ -9,46 +9,45 @@ package io.github.peerless2012.ass
  */
 class Ass {
 
+    private val ctx = AssContext()
+
     companion object {
 
-        init {
-            System.loadLibrary("asskt")
-        }
+        @JvmStatic
+        external fun nativeAssInit(ctx: Long): Long
 
         @JvmStatic
-        external fun nativeAssInit(): Long
+        external fun nativeAssAddFont(ctx: Long, ptr: Long, name: String, buffer: ByteArray)
 
         @JvmStatic
-        external fun nativeAssAddFont(ptr: Long, name: String, buffer: ByteArray)
+        external fun nativeAssClearFont(ctx: Long, ptr: Long)
 
         @JvmStatic
-        external fun nativeAssClearFont(ptr: Long)
-
-        @JvmStatic
-        external fun nativeAssDeinit(ptr: Long)
+        external fun nativeAssDeinit(ctx: Long, ptr: Long)
 
     }
 
-    private val nativeAss: Long = nativeAssInit()
+    private val nativeAss: Long = nativeAssInit(ctx.nativeCtx)
 
     public fun createTrack(): AssTrack {
-        return AssTrack(nativeAss)
+        return AssTrack(ctx, nativeAss)
     }
 
     public fun createRender(): AssRender {
-        return AssRender(nativeAss)
+        return AssRender(ctx, nativeAss)
     }
 
     public fun addFont(name: String, buffer: ByteArray) {
-        nativeAssAddFont(nativeAss, name, buffer)
+        nativeAssAddFont(ctx.nativeCtx, nativeAss, name, buffer)
     }
 
     public fun clearFont() {
-        nativeAssClearFont(nativeAss)
+        nativeAssClearFont(ctx.nativeCtx, nativeAss)
     }
 
     protected fun finalize() {
-        nativeAssDeinit(nativeAss)
+        nativeAssDeinit(ctx.nativeCtx, nativeAss)
+        ctx.destroy()
     }
 
 }

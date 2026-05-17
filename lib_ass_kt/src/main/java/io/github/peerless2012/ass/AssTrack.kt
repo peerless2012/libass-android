@@ -7,63 +7,63 @@ package io.github.peerless2012.ass
  * @Version V1.0
  * @Description
  */
-class AssTrack(private val ass: Long) {
+class AssTrack(private val ctx: AssContext, private val ass: Long) {
 
     companion object {
 
         @JvmStatic
-        external fun nativeAssTrackInit(track: Long): Long
+        external fun nativeAssTrackInit(ctx: Long, track: Long): Long
 
         @JvmStatic
-        external fun nativeAssTrackGetWidth(track: Long): Int
+        external fun nativeAssTrackGetWidth(ctx: Long, track: Long): Int
 
         @JvmStatic
-        external fun nativeAssTrackGetHeight(track: Long): Int
+        external fun nativeAssTrackGetHeight(ctx: Long, track: Long): Int
 
         @JvmStatic
-        external fun nativeAssTrackGetEvents(track: Long): Array<AssEvent>?
+        external fun nativeAssTrackGetEvents(ctx: Long, track: Long): Array<AssEvent>?
 
         @JvmStatic
-        external fun nativeAssTrackClearEvents(track: Long)
+        external fun nativeAssTrackClearEvents(ctx: Long, track: Long)
 
         @JvmStatic
-        external fun nativeAssTrackReadBuffer(track: Long, byteArray: ByteArray, offset: Int, length: Int)
+        external fun nativeAssTrackReadBuffer(ctx: Long, track: Long, byteArray: ByteArray, offset: Int, length: Int)
 
         @JvmStatic
-        external fun nativeAssTrackReadChunk(track: Long, start: Long, duration: Long, byteArray: ByteArray, offset: Int, length: Int)
+        external fun nativeAssTrackReadChunk(ctx: Long, track: Long, start: Long, duration: Long, byteArray: ByteArray, offset: Int, length: Int)
 
         @JvmStatic
-        external fun nativeAssTrackDeinit(track: Long)
+        external fun nativeAssTrackDeinit(ctx: Long, track: Long)
     }
 
-    public val nativeAssTrack = nativeAssTrackInit(ass)
+    public val nativeAssTrack = nativeAssTrackInit(ctx.nativeCtx, ass)
 
     public fun getWidth(): Int {
-        return nativeAssTrackGetWidth(nativeAssTrack)
+        return nativeAssTrackGetWidth(ctx.nativeCtx, nativeAssTrack)
     }
 
     public fun getHeight(): Int {
-        return nativeAssTrackGetHeight(nativeAssTrack)
+        return nativeAssTrackGetHeight(ctx.nativeCtx, nativeAssTrack)
     }
 
     public fun getEvents(): Array<AssEvent>? {
-        return nativeAssTrackGetEvents(nativeAssTrack)
+        return nativeAssTrackGetEvents(ctx.nativeCtx, nativeAssTrack)
     }
 
     public fun clearEvent() {
-        nativeAssTrackClearEvents(nativeAssTrack)
+        nativeAssTrackClearEvents(ctx.nativeCtx, nativeAssTrack)
     }
 
-    public fun readBuffer(array: ByteArray, offset: Int = 0, length : Int = array.size) {
-        nativeAssTrackReadBuffer(nativeAssTrack, array, offset, length)
+    public fun readBuffer(array: ByteArray, offset: Int = 0, length: Int = array.size) {
+        nativeAssTrackReadBuffer(ctx.nativeCtx, nativeAssTrack, array, offset, length)
     }
 
     public fun readChunk(start: Long, duration: Long, array: ByteArray, offset: Int = 0, length: Int = array.size) {
-        nativeAssTrackReadChunk(nativeAssTrack, start, duration, array, offset, length)
+        nativeAssTrackReadChunk(ctx.nativeCtx, nativeAssTrack, start, duration, array, offset, length)
     }
 
     protected fun finalize() {
-        nativeAssTrackDeinit(nativeAssTrack)
+        nativeAssTrackDeinit(ctx.nativeCtx, nativeAssTrack)
     }
 
 }

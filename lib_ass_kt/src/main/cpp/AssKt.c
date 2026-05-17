@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include <jni.h>
 #include "ass/ass.h"
 #include "fontconfig/fontconfig.h"
@@ -13,6 +14,10 @@
 #include "GLES2/gl2ext.h"
 
 #define LOG_TAG "SubtitleRenderer"
+
+typedef struct {
+    pthread_mutex_t mutex;
+} AssContext;
 
 void assMessageCallback(int level, const char *fmt, va_list args, void *data) {
     if (level > 4) return;
@@ -24,14 +29,35 @@ void assMessageCallback(int level, const char *fmt, va_list args, void *data) {
     }
 }
 
-jlong nativeAssInit(JNIEnv* env, jclass clazz) {
+jlong nativeAssContextCreate(JNIEnv* env, jclass clazz) {
+    AssContext *ctx = malloc(sizeof(AssContext));
+    pthread_mutex_init(&ctx->mutex, NULL);
+    return (jlong) ctx;
+}
+
+void nativeAssContextDestroy(JNIEnv* env, jclass clazz, jlong ctx) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_destroy(&assCtx->mutex);
+    free(assCtx);
+}
+
+static JNINativeMethod contextMethodTable[] = {
+        {"nativeAssContextCreate", "()J", (void*) nativeAssContextCreate},
+        {"nativeAssContextDestroy", "(J)V", (void*) nativeAssContextDestroy},
+};
+
+jlong nativeAssInit(JNIEnv* env, jclass clazz, jlong ctx) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ASS_Library* assLibrary = ass_library_init();
     ass_set_message_cb(assLibrary, assMessageCallback, env);
     ass_set_extract_fonts(assLibrary, 1);
+    pthread_mutex_unlock(&assCtx->mutex);
     return (jlong) assLibrary;
 }
 
-void nativeAssAddFont(JNIEnv* env, jclass clazz, jlong ass, jstring name, jbyteArray byteArray) {
+void nativeAssAddFont(JNIEnv* env, jclass clazz, jlong ctx, jlong ass, jstring name, jbyteArray byteArray) {
+    AssContext *assCtx = (AssContext *) ctx;
     jsize length = (*env)->GetArrayLength(env, byteArray);
 
     jbyte* bytePtr = (*env)->GetByteArrayElements(env, byteArray, NULL);
@@ -40,39 +66,55 @@ void nativeAssAddFont(JNIEnv* env, jclass clazz, jlong ass, jstring name, jbyteA
         return;
     }
     const char * cName = (*env)->GetStringUTFChars(env, name, NULL);
+    pthread_mutex_lock(&assCtx->mutex);
     ass_add_font(((ASS_Library *) ass), cName, bytePtr, length);
+    pthread_mutex_unlock(&assCtx->mutex);
     (*env)->ReleaseByteArrayElements(env, byteArray, bytePtr, 0);
     if (cName != NULL) {
         (*env)->ReleaseStringUTFChars(env, name, cName);
     }
 }
 
-void nativeAssClearFont(JNIEnv* env, jclass clazz, jlong ass) {
+void nativeAssClearFont(JNIEnv* env, jclass clazz, jlong ctx, jlong ass) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ass_clear_fonts((ASS_Library *) ass);
+    pthread_mutex_unlock(&assCtx->mutex);
 }
 
-void nativeAssDeinit(JNIEnv* env, jclass clazz, jlong ass) {
+void nativeAssDeinit(JNIEnv* env, jclass clazz, jlong ctx, jlong ass) {
     if (ass) {
+        AssContext *assCtx = (AssContext *) ctx;
+        pthread_mutex_lock(&assCtx->mutex);
         ass_library_done((ASS_Library *) ass);
+        pthread_mutex_unlock(&assCtx->mutex);
     }
 }
 
 static JNINativeMethod method_table[] = {
-        {"nativeAssInit", "()J", (void*)nativeAssInit},
-        {"nativeAssAddFont", "(JLjava/lang/String;[B)V", (void*) nativeAssAddFont},
-        {"nativeAssClearFont", "(J)V", (void*) nativeAssClearFont},
-        {"nativeAssDeinit", "(J)V", (void*)nativeAssDeinit}
+        {"nativeAssInit", "(J)J", (void*)nativeAssInit},
+        {"nativeAssAddFont", "(JJLjava/lang/String;[B)V", (void*) nativeAssAddFont},
+        {"nativeAssClearFont", "(JJ)V", (void*) nativeAssClearFont},
+        {"nativeAssDeinit", "(JJ)V", (void*)nativeAssDeinit}
 };
 
-jlong nativeAssTrackInit(JNIEnv* env, jclass clazz, jlong ass) {
-    return (jlong) ass_new_track((ASS_Library *) ass);
+jlong nativeAssTrackInit(JNIEnv* env, jclass clazz, jlong ctx, jlong ass) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
+    jlong result = (jlong) ass_new_track((ASS_Library *) ass);
+    pthread_mutex_unlock(&assCtx->mutex);
+    return result;
 }
 
-jint nativeAssTrackGetWidth(JNIEnv* env, jclass clazz, jlong track) {
-    return ((ASS_Track *) track)->PlayResX;
+jint nativeAssTrackGetWidth(JNIEnv* env, jclass clazz, jlong ctx, jlong track) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
+    jint result = ((ASS_Track *) track)->PlayResX;
+    pthread_mutex_unlock(&assCtx->mutex);
+    return result;
 }
 
-jobjectArray nativeAssTrackGetEvents(JNIEnv* env, jclass clazz, jlong track) {
+jobjectArray nativeAssTrackGetEvents(JNIEnv* env, jclass clazz, jlong ctx, jlong track) {
     jclass eventClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssEvent");
     if (eventClass == NULL) {
         return NULL;
@@ -82,14 +124,19 @@ jobjectArray nativeAssTrackGetEvents(JNIEnv* env, jclass clazz, jlong track) {
     if (constructor == NULL) {
         return NULL;
     }
+
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ASS_Track *assTrack = (ASS_Track *) track;
 
     if (assTrack->n_events <= 0) {
+        pthread_mutex_unlock(&assCtx->mutex);
         return NULL;
     }
 
     jobjectArray eventArray = (*env)->NewObjectArray(env, assTrack->n_events, eventClass, NULL);
     if (eventArray == NULL) {
+        pthread_mutex_unlock(&assCtx->mutex);
         return NULL;
     }
     for (int i = 0; i < assTrack->n_events; ++i) {
@@ -117,77 +164,109 @@ jobjectArray nativeAssTrackGetEvents(JNIEnv* env, jclass clazz, jlong track) {
 
         (*env)->SetObjectArrayElement(env, eventArray, i, javaEvent);
     }
+    pthread_mutex_unlock(&assCtx->mutex);
     return eventArray;
 }
 
-void nativeAssTrackClearEvents(JNIEnv* env, jclass clazz, jlong track) {
+void nativeAssTrackClearEvents(JNIEnv* env, jclass clazz, jlong ctx, jlong track) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ASS_Track* tr = (ASS_Track *) track;
     for (int i = 0; i < tr->n_events; i++) {
         ass_free_event(tr, i);
     }
     tr->n_events = 0;
+    pthread_mutex_unlock(&assCtx->mutex);
 }
 
-jint nativeAssTrackGetHeight(JNIEnv* env, jclass clazz, jlong track) {
-    return ((ASS_Track *) track)->PlayResY;
+jint nativeAssTrackGetHeight(JNIEnv* env, jclass clazz, jlong ctx, jlong track) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
+    jint result = ((ASS_Track *) track)->PlayResY;
+    pthread_mutex_unlock(&assCtx->mutex);
+    return result;
 }
 
-void nativeAssTrackReadBuffer(JNIEnv* env, jclass clazz, jlong track, jbyteArray buffer, jint offset, jint length) {
+void nativeAssTrackReadBuffer(JNIEnv* env, jclass clazz, jlong ctx, jlong track, jbyteArray buffer, jint offset, jint length) {
     jboolean isCopy;
     jbyte* elements = (*env)->GetByteArrayElements(env, buffer, &isCopy);
     if (elements == NULL) {
         return;
     }
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ass_process_data((ASS_Track *) track, elements + offset, length);
+    pthread_mutex_unlock(&assCtx->mutex);
     (*env)->ReleaseByteArrayElements(env, buffer, elements, 0);
 }
 
-void nativeAssTrackReadChunk(JNIEnv* env, jclass clazz, jlong track, jlong start, jlong duration, jbyteArray buffer, jint offset, jint length) {
+void nativeAssTrackReadChunk(JNIEnv* env, jclass clazz, jlong ctx, jlong track, jlong start, jlong duration, jbyteArray buffer, jint offset, jint length) {
     jboolean isCopy;
     jbyte* elements = (*env)->GetByteArrayElements(env, buffer, &isCopy);
     if (elements == NULL) {
         return;
     }
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ass_process_chunk((ASS_Track *) track, elements + offset, length, start, duration);
+    pthread_mutex_unlock(&assCtx->mutex);
     (*env)->ReleaseByteArrayElements(env, buffer, elements, 0);
 }
 
-void nativeAssTrackDeinit(JNIEnv* env, jclass clazz, jlong track) {
+void nativeAssTrackDeinit(JNIEnv* env, jclass clazz, jlong ctx, jlong track) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ass_free_track((ASS_Track *) track);
+    pthread_mutex_unlock(&assCtx->mutex);
 }
 
 
 static JNINativeMethod trackMethodTable[] = {
-        {"nativeAssTrackInit", "(J)J", (void*)nativeAssTrackInit},
-        {"nativeAssTrackGetWidth", "(J)I", (void*) nativeAssTrackGetWidth},
-        {"nativeAssTrackGetHeight", "(J)I", (void*) nativeAssTrackGetHeight},
-        {"nativeAssTrackGetEvents", "(J)[Lio/github/peerless2012/ass/AssEvent;", (void*) nativeAssTrackGetEvents},
-        {"nativeAssTrackClearEvents", "(J)V", (void*) nativeAssTrackClearEvents},
-        {"nativeAssTrackReadBuffer", "(J[BII)V", (void*)nativeAssTrackReadBuffer},
-        {"nativeAssTrackReadChunk", "(JJJ[BII)V", (void*)nativeAssTrackReadChunk},
-        {"nativeAssTrackDeinit", "(J)V", (void*)nativeAssTrackDeinit}
+        {"nativeAssTrackInit", "(JJ)J", (void*)nativeAssTrackInit},
+        {"nativeAssTrackGetWidth", "(JJ)I", (void*) nativeAssTrackGetWidth},
+        {"nativeAssTrackGetHeight", "(JJ)I", (void*) nativeAssTrackGetHeight},
+        {"nativeAssTrackGetEvents", "(JJ)[Lio/github/peerless2012/ass/AssEvent;", (void*) nativeAssTrackGetEvents},
+        {"nativeAssTrackClearEvents", "(JJ)V", (void*) nativeAssTrackClearEvents},
+        {"nativeAssTrackReadBuffer", "(JJ[BII)V", (void*)nativeAssTrackReadBuffer},
+        {"nativeAssTrackReadChunk", "(JJJJ[BII)V", (void*)nativeAssTrackReadChunk},
+        {"nativeAssTrackDeinit", "(JJ)V", (void*)nativeAssTrackDeinit}
 };
 
-jlong nativeAssRenderInit(JNIEnv* env, jclass clazz, jlong ass) {
+jlong nativeAssRenderInit(JNIEnv* env, jclass clazz, jlong ctx, jlong ass) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ASS_Renderer *assRenderer = ass_renderer_init((ASS_Library *) ass);
     ass_set_fonts(assRenderer, NULL, "sans-serif", ASS_FONTPROVIDER_FONTCONFIG, NULL, 1);
+    pthread_mutex_unlock(&assCtx->mutex);
     return (jlong) assRenderer;
 }
 
-void nativeAssRenderSetFontScale(JNIEnv* env, jclass clazz, jlong render, jfloat scale) {
+void nativeAssRenderSetFontScale(JNIEnv* env, jclass clazz, jlong ctx, jlong render, jfloat scale) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ass_set_font_scale((ASS_Renderer *) render, scale);
+    pthread_mutex_unlock(&assCtx->mutex);
 }
 
-void nativeAssRenderSetCacheLimit(JNIEnv* env, jclass clazz, jlong render, jint glyphMax, jint bitmapMaxSize) {
+void nativeAssRenderSetCacheLimit(JNIEnv* env, jclass clazz, jlong ctx, jlong render, jint glyphMax, jint bitmapMaxSize) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ass_set_cache_limits((ASS_Renderer *) render, glyphMax, bitmapMaxSize);
+    pthread_mutex_unlock(&assCtx->mutex);
 }
 
-void nativeAssRenderSetFrameSize(JNIEnv* env, jclass clazz, jlong render, jint width, jint height) {
+void nativeAssRenderSetFrameSize(JNIEnv* env, jclass clazz, jlong ctx, jlong render, jint width, jint height) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ass_set_frame_size((ASS_Renderer *) render, width, height);
+    pthread_mutex_unlock(&assCtx->mutex);
 }
 
-void nativeAssRenderSetStorageSize(JNIEnv* env, jclass clazz, jlong render, jint width, jint height) {
+void nativeAssRenderSetStorageSize(JNIEnv* env, jclass clazz, jlong ctx, jlong render, jint width, jint height) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     ass_set_storage_size((ASS_Renderer *) render, width, height);
+    pthread_mutex_unlock(&assCtx->mutex);
 }
 
 jobject createBitmap(JNIEnv* env, const ASS_Image* image) {
@@ -293,16 +372,21 @@ static int count_ass_images(ASS_Image *images) {
     return count;
 }
 
-jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time, jint type) {
+jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong ctx, jlong render, jlong track, jlong time, jint type) {
+    AssContext *assCtx = (AssContext *) ctx;
+    pthread_mutex_lock(&assCtx->mutex);
     int changed;
     ASS_Image *image = ass_render_frame((ASS_Renderer *) render, (ASS_Track *) track, time, &changed);
     if (image == NULL) {
+        pthread_mutex_unlock(&assCtx->mutex);
         return NULL;
     }
+
     jclass assFrameClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssFrame");
     jmethodID assFrameConstructor = (*env)->GetMethodID(env, assFrameClass, "<init>", "([Lio/github/peerless2012/ass/AssTex;I)V");
 
     if (changed == 0) {
+        pthread_mutex_unlock(&assCtx->mutex);
         jobject res = (*env)->NewObject(env, assFrameClass, assFrameConstructor, NULL, changed);
         return res;
     }
@@ -313,6 +397,7 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
 
     jobjectArray assTexArr = (*env)->NewObjectArray(env, size, assTexClass, NULL);
     if (assTexArr == NULL) {
+        pthread_mutex_unlock(&assCtx->mutex);
         return NULL;
     }
 
@@ -338,24 +423,28 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
         }
         index++;
     }
+    pthread_mutex_unlock(&assCtx->mutex);
 
     return (*env)->NewObject(env, assFrameClass, assFrameConstructor, assTexArr, changed);
 }
 
-void nativeAssRenderDeinit(JNIEnv* env, jclass clazz, jlong render) {
+void nativeAssRenderDeinit(JNIEnv* env, jclass clazz, jlong ctx, jlong render) {
     if (render) {
+        AssContext *assCtx = (AssContext *) ctx;
+        pthread_mutex_lock(&assCtx->mutex);
         ass_renderer_done((ASS_Renderer *) render);
+        pthread_mutex_unlock(&assCtx->mutex);
     }
 }
 
 static JNINativeMethod renderMethodTable[] = {
-        {"nativeAssRenderInit", "(J)J", (void*)nativeAssRenderInit},
-        {"nativeAssRenderSetFontScale", "(JF)V", (void*)nativeAssRenderSetFontScale},
-        {"nativeAssRenderSetCacheLimit", "(JII)V", (void*)nativeAssRenderSetCacheLimit},
-        {"nativeAssRenderSetStorageSize", "(JII)V", (void*) nativeAssRenderSetStorageSize},
-        {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
-        {"nativeAssRenderFrame", "(JJJI)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
-        {"nativeAssRenderDeinit", "(J)V", (void*)nativeAssRenderDeinit},
+        {"nativeAssRenderInit", "(JJ)J", (void*)nativeAssRenderInit},
+        {"nativeAssRenderSetFontScale", "(JJF)V", (void*)nativeAssRenderSetFontScale},
+        {"nativeAssRenderSetCacheLimit", "(JJII)V", (void*)nativeAssRenderSetCacheLimit},
+        {"nativeAssRenderSetStorageSize", "(JJII)V", (void*) nativeAssRenderSetStorageSize},
+        {"nativeAssRenderSetFrameSize", "(JJII)V", (void*)nativeAssRenderSetFrameSize},
+        {"nativeAssRenderFrame", "(JJJJI)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
+        {"nativeAssRenderDeinit", "(JJ)V", (void*)nativeAssRenderDeinit},
 };
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     JNIEnv *env = NULL;
@@ -364,7 +453,17 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     if ((*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_4) != JNI_OK) {
         return -1;
     }
-    jclass clazz = (*env)->FindClass(env, "io/github/peerless2012/ass/Ass");
+
+    jclass clazz = (*env)->FindClass(env, "io/github/peerless2012/ass/AssContext");
+    if (clazz == NULL) {
+        return -1;
+    }
+
+    if ((*env)->RegisterNatives(env, clazz, contextMethodTable, sizeof(contextMethodTable) / sizeof(contextMethodTable[0])) < 0) {
+        return -1;
+    }
+
+    clazz = (*env)->FindClass(env, "io/github/peerless2012/ass/Ass");
     if (clazz == NULL) {
         return -1;
     }
