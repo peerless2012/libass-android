@@ -4,7 +4,6 @@ import io.github.peerless2012.ass.AssFrame
 import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.AssTexType
 import java.util.concurrent.ExecutorCompletionService
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -13,14 +12,11 @@ import kotlin.concurrent.withLock
 /**
  * Executor to render.
  */
-class AssExecutor internal constructor(
-    private val renderFrame: (Long, AssTexType) -> AssFrame?,
-    private val executor: ExecutorService
-) {
-
-    constructor(render: AssRender) : this(render::renderFrame, Executors.newSingleThreadExecutor())
+class AssExecutor(private val render: AssRender) {
 
     private val assFrameNotChange = AssFrame(null, 0)
+
+    private val executor = Executors.newSingleThreadExecutor()
 
     private val executorService = ExecutorCompletionService<AssFrame?>(executor)
 
@@ -33,7 +29,7 @@ class AssExecutor internal constructor(
 
     private var executorBusy = false
 
-    private val task = AssTask(renderFrame)
+    private val task = AssTask(render)
 
     public fun renderFrame(presentationTimeUs: Long, type: AssTexType): AssFrame? {
         var assFrame: AssFrame? = null
@@ -44,7 +40,7 @@ class AssExecutor internal constructor(
             // submit render task
             executorService.submit {
                 try {
-                    lastFrame = renderFrame(presentationTimeUs / 1000, type)
+                    lastFrame = render.renderFrame(presentationTimeUs / 1000, type)
                     lastFrame
                 } finally {
                     lifecycleLock.withLock {

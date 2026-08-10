@@ -13,11 +13,7 @@ import kotlin.concurrent.withLock
  * @Version V1.0
  * @Description
  */
-class AssTask internal constructor(
-    private val renderFrame: (Long, AssTexType) -> AssFrame?
-) : Runnable {
-
-    constructor(render: AssRender) : this(render::renderFrame)
+class AssTask(private val render: AssRender) : Runnable {
 
     private val stateLock = ReentrantLock()
 
@@ -63,7 +59,7 @@ class AssTask internal constructor(
         }
         var result: AssFrame? = null
         try {
-            result = renderFrame(renderArguments.first / 1000, renderArguments.second)
+            result = render.renderFrame(renderArguments.first / 1000, renderArguments.second)
         } catch (e: Exception) {
             result = null
         } finally {
