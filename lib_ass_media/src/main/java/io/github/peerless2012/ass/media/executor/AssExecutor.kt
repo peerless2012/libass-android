@@ -4,52 +4,71 @@ import io.github.peerless2012.ass.AssFrame
 import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.AssTexType
 import java.util.concurrent.ExecutorCompletionService
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Executor to render.
  */
-class AssExecutor(private val render: AssRender) {
+class AssExecutor internal constructor(
+    private val renderFrame: (Long, AssTexType) -> AssFrame?,
+    private val executor: ExecutorService
+) {
+
+    constructor(render: AssRender) : this(render::renderFrame, Executors.newSingleThreadExecutor())
 
     private val assFrameNotChange = AssFrame(null, 0)
 
-    private val executor = Executors.newSingleThreadExecutor()
-
     private val executorService = ExecutorCompletionService<AssFrame?>(executor)
 
+    private val lifecycleLock = ReentrantLock()
+
+    private var isShutdown = false
+
+    @Volatile
     private var lastFrame: AssFrame? = null
 
     private var executorBusy = false
 
-    private val task = AssTask(render)
+    private val task = AssTask(renderFrame)
 
     public fun renderFrame(presentationTimeUs: Long, type: AssTexType): AssFrame? {
         var assFrame: AssFrame? = null
-        if (executorBusy) {
-            // render thread is busy, keep last content
-            assFrame = assFrameNotChange
-        } else {
+        val future = lifecycleLock.withLock {
+            if (isShutdown || executorBusy) return@withLock null
+
+            executorBusy = true
             // submit render task
-            val future = executorService.submit{
-                executorBusy = true
-                lastFrame = render.renderFrame(presentationTimeUs / 1000, type)
-                executorBusy = false
-                lastFrame
-            }
-            try {
-                assFrame = if (lastFrame != null) {
+            executorService.submit {
+                try {
+                    lastFrame = renderFrame(presentationTimeUs / 1000, type)
                     lastFrame
-                } else {
-                    future.get(8, TimeUnit.MILLISECONDS)
+                } finally {
+                    lifecycleLock.withLock {
+                        executorBusy = false
+                    }
                 }
-            } catch (exception: Exception) {
-                // task timeout
-                assFrame = lastFrame
-                if (assFrame == null) {
-                    // keep last content
-                    assFrame = assFrameNotChange
-                }
+            }
+        }
+        if (future == null) {
+            lastFrame = null
+            return assFrameNotChange
+        }
+        try {
+            assFrame = if (lastFrame != null) {
+                lastFrame
+            } else {
+                future.get(8, TimeUnit.MILLISECONDS)
+            }
+        } catch (exception: Exception) {
+            // task timeout
+            assFrame = lastFrame
+            if (assFrame == null) {
+                // keep last content
+                assFrame = assFrameNotChange
             }
         }
         lastFrame = null
@@ -57,20 +76,27 @@ class AssExecutor(private val render: AssRender) {
     }
 
     public fun asyncRenderFrame(presentationTimeUs: Long, type: AssTexType, callback: (AssFrame?) -> Unit) {
-        if (task.executorBusy) {
-            // render thread is busy, keep last content
-            callback.invoke(assFrameNotChange)
-        } else {
-            task.presentationTimeUs = presentationTimeUs
-            task.callback = callback
-            task.type = type
-            // execute render task
+        lifecycleLock.withLock {
+            if (isShutdown) return
+            if (!task.prepare(presentationTimeUs, type, callback)) {
+                // render thread is busy, keep last content
+                callback.invoke(assFrameNotChange)
+                return
+            }
             executor.execute(task)
         }
     }
 
     public fun shutdown() {
-        executor.shutdown()
+        val shouldShutdown = lifecycleLock.withLock {
+            if (isShutdown) return@withLock false
+            isShutdown = true
+            true
+        }
+        if (!shouldShutdown) return
+
+        task.cancel()
+        executor.shutdownNow()
     }
 
 }
