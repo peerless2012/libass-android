@@ -26,8 +26,11 @@ App use media3 can use this module to add ass for your player.
 ## Who is using
 | Icon                                      | Name   |
 |------------------------------------------|--------|
-| <img src="https://raw.githubusercontent.com/FongMi/TV/refs/heads/fongmi/other/image/icon.png" alt="影視TV" width="50" /> | [影視TV](https://github.com/FongMi/TV)  |
+| <img src="https://github.com/FongMi/TV/blob/fongmi/app/src/main/res/mipmap-hdpi/ic_launcher.png?raw=true" alt="影視TV" width="50" /> | [影視TV](https://github.com/FongMi/TV)  |
 | <img src="https://github.com/user-attachments/assets/e9b4d86b-6ce8-4550-bde2-bdf9a3818644" alt="AfuseKt" width="50" /> | [AfuseKt](https://github.com/AttemptD/AfuseKt-release)  |
+| <img src="https://avatars.githubusercontent.com/u/45698031" alt="Jellyfin Android TV" width="50"> | [Jellyfin Android TV](https://github.com/jellyfin/jellyfin-androidtv) |
+| <img src="https://avatars.githubusercontent.com/u/181620197" alt="Fladder" width="50"> | [Fladder](https://github.com/DonutWare/Fladder) |
+| <img src="https://avatars.githubusercontent.com/u/267417830" alt="NuvioTV" width="50"> | [NuvioTV](https://github.com/NuvioMedia/NuvioTV) |
 
 ## Issue
 If you have issue when use, [create](https://github.com/peerless2012/libass-android/issues/new) an issue.
