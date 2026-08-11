@@ -36,7 +36,9 @@ class AssSubtitleCanvasView : View, AssSubtitleRender {
     private var renderSize = Size.ZERO
 
     // Use a local param, avoid create each time.
-    private val invalidateCallback = Runnable { invalidate() }
+    private val invalidateCallback = Runnable {
+        if (isAttachedToWindow) invalidate()
+    }
 
     // Use a local param, avoid create each time.
     private val assRenderCallback: (AssFrame?) -> Unit = assRenderCallback@{ assFrame ->
@@ -49,7 +51,7 @@ class AssSubtitleCanvasView : View, AssSubtitleRender {
             it.bitmap?.prepareToDraw()
         }
         this.assFrame = assFrame
-        handler.post(invalidateCallback)
+        post(invalidateCallback)
     }
 
     constructor(context: Context, assHandler: AssHandler) : this(context, null, assHandler)
@@ -127,6 +129,8 @@ class AssSubtitleCanvasView : View, AssSubtitleRender {
         assHandler.renderCallback = null
         assExecutor?.shutdown()
         assExecutor = null
+        removeCallbacks(invalidateCallback)
+        assFrame = null
         super.onDetachedFromWindow()
     }
 }
