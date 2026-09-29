@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "io.github.peerless2012.ass.demo"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.peerless2012.ass"
