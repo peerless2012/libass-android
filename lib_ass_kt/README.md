@@ -1,10 +1,10 @@
 # ASS Kt
-A kotlin wrapper for libass native api.
+A kotlin wrapper for libass's native api.
 
-App want to use libass in java/kotlin can use this module.
+Apps that want to use libass in java/kotlin can use this module.
 
 ## How to use
-1. Add MavenCenter to your project
+1. Add MavenCentral to your project
     ```
     allprojects {
         repositories {
@@ -12,11 +12,11 @@ App want to use libass in java/kotlin can use this module.
         }
     }
     ```
-2. Add dependency.
+2. Add the dependency.
     ```
    implementation "io.github.peerless2012:ass-kt:x.x.x"
     ```
-3. Use libass-kt in java/kotlin
+3. Use libass-kt your java/kotlin code
     ```
     val ass = ASS()
     ```
