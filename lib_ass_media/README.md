@@ -1,11 +1,10 @@
 # ASS Media
-A media3 extend library for libass.
+A media3 extension library for libass.
 
-App use media3 can use this module to add ass for your player.
+Apps that use media3 can use this module to add libass into their player.
 
 ## Feature
-There are three ways to render ass subtitle.
-Which is defined in `AssRenderType`.
+There are three ways to render ass subtitles which are defined in `AssRenderType`.
 
 | Type | Feature | Anim | HDR/DV | Block render/UI |
 | :----: | :----: | :----: | :----: | :----: |
@@ -16,44 +15,44 @@ Which is defined in `AssRenderType`.
 | OVERLAY_OPEN_GL | Overlay | ✅ | ✅ | ❌ |
 
 * [OverlayShaderProgram does not support HDR colors yet](https://github.com/androidx/media/issues/723)
-* [Why does TextOverLay support hdr, but Bitmap not support?](https://github.com/androidx/media/issues/2383)
+* [Why does TextOverLay support hdr, but not Bitmap support?](https://github.com/androidx/media/issues/2383)
 
 ### 1. CUES
-The ass/ssa subtitle will be parsed and transcode to bytes, and decode to bitmap when render.
+The ass/ssa subtitles will be parsed and transcoded into bytes, and decoded into a bitmap when rendered.
 
-This type not support dynamic feature, because all subtitle and it time is static.
+This type does not support the dynamic feature, because all subtitles and their time are static.
 
-But since the subtitle is transcode, it will not cost too much time when render. All work is done in parse thread.
+However, since the subtitles are transcodeed, they will be to expensiveto render. All the work is done in the parse thread.
 
 ### 2. EFFECTS_CANVAS
-The ass/ssa subtitle will be cal and render at runtime use media3 effect feature, and this will support all dynamic features.
+The ass/ssa subtitles will be calculated and rendered at runtime using the media3 effect feature, this supports all dynamic features.
 
-And this need to create a screen size offscreen bitmap to render the libass bitmap pieces.
+This needs the screen size to create an off-screen bitmap and render the libass bitmap pieces.
 
-But when the dynamic feature is too complex, and libass will cost too much time to cal, the render will be blocked.
+If a dynamic feature is too complex, libass will take too long to long to calculate and the render will be blocked.
 
 ### 3. EFFECTS_OPEN_GL
-Just like `EFFECTS_CANVAS`, but use OpenGL to render. and the offscreen tex is create to render the bitmap pieces.
+Just like `EFFECTS_CANVAS`, but uses OpenGL to render. and the offscreen text is created to render the bitmap pieces.
 
-Due to test, the `EFFECTS_OPEN_GL` will save 1/3 time when render.
+According to tests, the `EFFECTS_OPEN_GL` will take a 1/3 of the time to render.
 
 ### 4. OVERLAY_CANVAS
-The ass/ssa subtitle will be cal at runtime, and add a `Overlay` widget in `SubtitleView` to render subtitle.
+The ass/ssa subtitles will be calculated at runtime, and an `Overlay` widget is added in `SubtitleView` to render the subtitles.
 
-The `libass` render result will copy to bitmap, and draw in `Canvas`.
+The `libass` render result will copy into a bitmap, and draw in the `Canvas`.
 
-It will block UI thread when rendering.
+This will block UI thread when rendering.
 
 ### 4. OVERLAY_OPEN_GL
-Just like `OVERLAY_CANVAS`, but the `libass` render result will pass to `OpenGL` texture, and avoid create tmp bitmap.
+Just like `OVERLAY_CANVAS`, but the `libass` render result will passed to `OpenGL` as a texture to avoid creating temporary bitmap.
 
-It will save half memory than `OVERLAY_CANVAS`.
+It uses about half as much memory as `OVERLAY_CANVAS`.
 
-And the `libass` render and `OpenGL` draw on another separate thread, it will not block the UI thread like `OVERLAY_CANVAS`.
+The `libass` renderer and `OpenGL` draw on separate thread, so it will not block the UI thread like `OVERLAY_CANVAS`.
 
 
 ## How to use
-1. Add MavenCenter to your project
+1. Add MavenCentral to your project
     ```
     allprojects {
         repositories {
@@ -61,11 +60,11 @@ And the `libass` render and `OpenGL` draw on another separate thread, it will no
         }
     }
     ```
-2. Add dependency.
+2. Add the dependency.
     ```
    implementation "io.github.peerless2012:ass-media:x.x.x"
     ```
-3. Use libass-media in java/kotlin
+3. Using libass-media in your java/kotlin code
     ```
     player = ExoPlayer.Builder(this)
     .buildWithAssSupport(
@@ -73,7 +72,7 @@ And the `libass` render and `OpenGL` draw on another separate thread, it will no
         AssRenderType.OPEN_GL
     )
     ```
-4. Add external subtitles.
+4. Adding external subtitles
    ```
    val enConfig = MediaItem.SubtitleConfiguration
          .Builder(Uri.parse("http://192.168.0.254:80/files/f-en.ass"))
@@ -101,7 +100,7 @@ And the `libass` render and `OpenGL` draw on another separate thread, it will no
          .setUri(url)
          .setSubtitleConfigurations(ImmutableList.of(enConfig, jpConfig, zhConfig))
    ```
-   NOTE: Make sure the `id` is set and different from media self track size. Recommend bigger than 128 or more bigger.
+   NOTE: Make sure the `id` is set and different from the media self track size. The recommend value is 128 or larger.
 
 ## Configuration
 
