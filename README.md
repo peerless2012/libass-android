@@ -3,25 +3,25 @@
 [![ass-kt - Version](https://img.shields.io/maven-central/v/io.github.peerless2012/ass-kt?label=ass-kt)](https://central.sonatype.com/artifact/io.github.peerless2012/ass-kt)
 [![ass-media - Version](https://img.shields.io/maven-central/v/io.github.peerless2012/ass-media?label=ass-media)](https://central.sonatype.com/artifact/io.github.peerless2012/ass-media)
 
-A collection of libraries for implementing [libass](https://github.com/libass/libass) for Android.
+A collection of libraries for implementing [libass](https://github.com/libass/libass) into Android apps.
 
-It use [libass-cmake](https://github.com/peerless2012/libass-cmake) to build libass.
+It is built using [libass-cmake](https://github.com/peerless2012/libass-cmake).
 
 ## Modules
 ### [lib_ass](./lib_ass)
-A native build library with prefab feature, this module contains libass.so and the header files.
+A native build library with prefab features, this module contains libass.so and its header files.
 
-App want to use libass in C/C++ can use this module.
+Apps that want to use libass in C/C++ can use this module.
 
 ### [lib_ass_kt](./lib_ass_kt)
-A kotlin wrapper for libass native api. 
+A kotlin wrapper for libass's native api. 
 
-App want to use libass in java/kotlin can use this module. 
+Apps that want to use libass with java/kotlin can use this module. 
 
 ### [lib_ass_media](./lib_ass_media)
-A media3 extend library for libass.
+A media3 extension library for libass.
 
-App use media3 can use this module to add ass for your player.
+Apps that use media3 can use this module to implement libass into your player.
 
 ## Who is using
 | Icon                                      | Name   |
@@ -33,7 +33,7 @@ App use media3 can use this module to add ass for your player.
 | <img src="https://avatars.githubusercontent.com/u/267417830" alt="NuvioTV" width="50"> | [NuvioTV](https://github.com/NuvioMedia/NuvioTV) |
 
 ## Issue
-If you have issue when use, [create](https://github.com/peerless2012/libass-android/issues/new) an issue.
+If you have any issues while useing this, [create](https://github.com/peerless2012/libass-android/issues/new) an issue.
 
 ## PR
-If you want to fix or add feature, [create](https://github.com/peerless2012/libass-android/compare) a pr.
+If you want to fix something or add features, [create](https://github.com/peerless2012/libass-android/compare) a pr.
