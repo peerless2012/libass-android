@@ -87,6 +87,10 @@ class AssHandler(
 
     var videoTimeCallback: ((Long) -> Unit)? = null
 
+    /** [AssRenderType.EFFECTS_ATLAS]'s overlay is the only one to set the frame size: it uses each video
+     * frame's size, which can differ from the video track's size (pixel aspect ratio, rotation). */
+    private val frameSizeSetByOverlay = renderType == AssRenderType.EFFECTS_ATLAS
+
     /** The overlay manager for toggling the effects renderer. */
     private var overlayManager: AssOverlayManager? = null
 
@@ -103,8 +107,8 @@ class AssHandler(
     fun init(player: ExoPlayer) {
         player.addListener(this)
         handler = Handler(player.applicationLooper)
-        if (renderType == AssRenderType.EFFECTS_CANVAS || renderType == AssRenderType.EFFECTS_OPEN_GL) {
-            overlayManager = AssOverlayManager(this, player, renderType == AssRenderType.EFFECTS_OPEN_GL)
+        if (renderType == AssRenderType.EFFECTS_CANVAS || renderType == AssRenderType.EFFECTS_OPEN_GL || renderType == AssRenderType.EFFECTS_ATLAS) {
+            overlayManager = AssOverlayManager(this, player, renderType)
         }
     }
 
@@ -171,7 +175,7 @@ class AssHandler(
         if (renderType == AssRenderType.OVERLAY_CANVAS || renderType == AssRenderType.OVERLAY_OPEN_GL) {
             val renderSize = computeRenderSize(surfaceSize.width, surfaceSize.height)
             render.setFrameSize(renderSize.width, renderSize.height)
-        } else {
+        } else if (!frameSizeSetByOverlay) {
             val renderSize = computeRenderSize(videoSize.width, videoSize.height)
             render.setFrameSize(renderSize.width, renderSize.height)
         }
@@ -282,7 +286,7 @@ class AssHandler(
             if (videoSize.isValid) {
                 render.setStorageSize(videoSize.width, videoSize.height)
             }
-            if (videoSize.isValid) {
+            if (videoSize.isValid && !frameSizeSetByOverlay) {
                 val renderSize = computeRenderSize(videoSize.width, videoSize.height)
                 render.setFrameSize(renderSize.width, renderSize.height)
             }
@@ -291,7 +295,7 @@ class AssHandler(
                     val renderSize = computeRenderSize(surfaceSize.width, surfaceSize.height)
                     render.setFrameSize(renderSize.width, renderSize.height)
                 }
-            } else {
+            } else if (!frameSizeSetByOverlay) {
                 if (videoSize.isValid) {
                     val renderSize = computeRenderSize(videoSize.width, videoSize.height)
                     render.setFrameSize(renderSize.width, renderSize.height)

@@ -18,7 +18,8 @@ data class AssHandlerConfig(
      * - 2560 * 1440 = 3_686_400 (limit to 1440p)
      * - 0 = no limit, render at full frame size (default)
      *
-     * Only applies to OVERLAY and EFFECTS render types. CUES mode is not affected.
+     * Only applies to OVERLAY and EFFECTS render types, except EFFECTS_ATLAS, which
+     * always renders at video size. CUES mode is not affected.
      */
     val maxRenderPixels: Int = 0
 )

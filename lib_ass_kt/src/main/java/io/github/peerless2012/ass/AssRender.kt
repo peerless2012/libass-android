@@ -34,6 +34,12 @@ class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
 
         @JvmStatic
         external fun nativeAssRenderDeinit(render: Long)
+
+        @JvmStatic
+        external fun nativeAssOverlayDraw(overlay: Long, render: Long, track: Long, fbo: Int, frameWidth: Int, frameHeight: Int, timeMs: Long): Long
+
+        @JvmStatic
+        external fun nativeAssOverlayRelease(overlay: Long)
     }
 
     private var nativeRender: Long = nativeAssRenderInit(nativeAss)
@@ -84,6 +90,25 @@ class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
             val t = track ?: return null
             if (t.released || t.nativeAssTrack == 0L) return null
             return nativeAssRenderFrame(nativeRender, t.nativeAssTrack, time, type.ordinal)
+        }
+    }
+
+    // Only for EFFECTS_ATLAS. Draws onto `fbo` with `overlay`, the handle the previous call returned (0
+    // the first time), and returns the handle to pass next. An overlay's GL objects belong to the GL
+    // context it was created in, so the caller keeps one per context.
+    fun drawOverlayFrame(overlay: Long, fbo: Int, frameWidth: Int, frameHeight: Int, timeMs: Long): Long {
+        lock.withLock {
+            if (released || nativeRender == 0L) return overlay
+            val t = track ?: return overlay
+            if (t.released || t.nativeAssTrack == 0L) return overlay
+            return nativeAssOverlayDraw(overlay, nativeRender, t.nativeAssTrack, fbo, frameWidth, frameHeight, timeMs)
+        }
+    }
+
+    // Only for EFFECTS_ATLAS. Frees an overlay from drawOverlayFrame, on its GL context's thread.
+    fun releaseOverlay(overlay: Long) {
+        if (overlay != 0L) {
+            nativeAssOverlayRelease(overlay)
         }
     }
 
