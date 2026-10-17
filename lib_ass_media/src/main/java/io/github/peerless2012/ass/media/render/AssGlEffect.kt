@@ -1,6 +1,7 @@
 package io.github.peerless2012.ass.media.render
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.GlEffect
@@ -15,6 +16,13 @@ class AssGlEffect(
 ) : GlEffect {
 
     override fun toGlShaderProgram(context: Context, useHdr: Boolean): GlShaderProgram {
+        if (useHdr) {
+            Log.w(TAG, "HDR is not supported: subtitles are blended as 8-bit sRGB and colors will be wrong")
+        }
         return AssGlShaderProgram(handler, render)
+    }
+
+    companion object {
+        private const val TAG = "AssGlEffect"
     }
 }
