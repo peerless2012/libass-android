@@ -26,7 +26,7 @@ class AssOverlayManager(
         if (renderer == currentRenderer) return
         this.currentRenderer = renderer
         val effect: Effect = when (renderType) {
-            AssRenderType.EFFECTS_ATLAS -> AssGlEffect(renderer)
+            AssRenderType.EFFECTS_ATLAS -> AssGlEffect(handler, renderer)
             AssRenderType.EFFECTS_OPEN_GL -> OverlayEffect(listOf(AssTexOverlay(handler, renderer)))
             else -> OverlayEffect(listOf(AssCanvasOverlay(handler, renderer)))
         }

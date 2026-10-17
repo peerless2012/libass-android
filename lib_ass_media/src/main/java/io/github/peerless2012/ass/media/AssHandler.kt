@@ -17,6 +17,7 @@ import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.AssTrack
 import io.github.peerless2012.ass.Ass
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
+import io.github.peerless2012.ass.media.render.AssFrameTimeMapper
 import io.github.peerless2012.ass.media.render.AssOverlayManager
 import io.github.peerless2012.ass.media.type.AssRenderType
 
@@ -86,6 +87,9 @@ class AssHandler(
         }
 
     var videoTimeCallback: ((Long) -> Unit)? = null
+
+    /** Maps video effect timestamps to media time. Fed by the video renderer for [AssRenderType.EFFECTS_ATLAS]. */
+    internal val frameTimeMapper = AssFrameTimeMapper()
 
     /** [AssRenderType.EFFECTS_ATLAS]'s overlay is the only one to set the frame size: it uses each video
      * frame's size, which can differ from the video track's size (pixel aspect ratio, rotation). */

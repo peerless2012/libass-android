@@ -10,6 +10,7 @@ import androidx.media3.common.util.GlUtil
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.GlShaderProgram
 import io.github.peerless2012.ass.AssRender
+import io.github.peerless2012.ass.media.AssHandler
 import java.util.concurrent.Executor
 
 /**
@@ -26,6 +27,7 @@ import java.util.concurrent.Executor
  */
 @OptIn(UnstableApi::class)
 class AssGlShaderProgram(
+    private val handler: AssHandler,
     private val render: AssRender
 ) : GlShaderProgram {
 
@@ -76,13 +78,17 @@ class AssGlShaderProgram(
                     GlUtil.createFboForTexture(inputTexture.texId)
                 }
             }
+            // presentationTimeUs isn't media time, see AssFrameTimeMapper. Without a mapping (the player
+            // wasn't built with AssRenderersFactory), fall back to it like the other effect overlays do.
+            val mediaTimeUs = handler.frameTimeMapper.toMediaTimeUs(presentationTimeUs)
+                .takeIf { it != C.TIME_UNSET } ?: presentationTimeUs
             val startNs = System.nanoTime()
             overlay = render.drawOverlayFrame(
                 overlay,
                 fbo,
                 inputTexture.width,
                 inputTexture.height,
-                presentationTimeUs / 1000
+                mediaTimeUs / 1000
             )
             val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
             if (elapsedMs >= SLOW_FRAME_LOG_THRESHOLD_MS) {
