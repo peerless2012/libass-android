@@ -107,6 +107,11 @@ AssOverlay* assOverlayDraw(AssOverlay* overlay, ASS_Renderer* render, ASS_Track*
     const long long start = nowMs();
     const ASS_Image* images = ass_render_frame(render, track, timeMs, &changed);
     const long long rendered = nowMs();
+    // The atlas starts empty, whatever libass reports.
+    if (!overlay->hasRendered) {
+        overlay->hasRendered = true;
+        changed = 2;
+    }
     updateAtlas(overlay, images, changed);
     const long long updated = nowMs();
 

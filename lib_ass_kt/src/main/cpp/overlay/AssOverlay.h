@@ -13,6 +13,9 @@ typedef struct {
     AssAtlas atlas;
     // The video frame's pixel size: libass's frame size and the GL viewport.
     int frameW, frameH;
+    // Whether libass has rendered a frame for this overlay. Until then, its detect_change compares with
+    // whatever the renderer rendered last, possibly for an overlay released since.
+    bool hasRendered;
 } AssOverlay;
 
 /**

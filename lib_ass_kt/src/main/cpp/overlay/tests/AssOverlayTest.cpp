@@ -171,6 +171,15 @@ TEST_F(AssOverlayTest, DrawsTheTrackAtTheGivenTime) {
     EXPECT_GT(draw(2500).images, 0) << kNoImages;
 }
 
+// A new overlay on a renderer that already rendered the frame, as when the subtitles are turned off
+// and on again: libass reports no change, but the new overlay has drawn nothing yet.
+TEST_F(AssOverlayTest, NewOverlayDrawsUnchangedSubtitles) {
+    ASSERT_GT(draw(1000).images, 0) << kNoImages;
+    assOverlayRelease(overlay);
+    overlay = nullptr;
+    EXPECT_EQ(draw(1000).changed, 0);
+}
+
 // The first draw creates the overlay, and later ones reuse it.
 TEST_F(AssOverlayTest, KeepsItsOverlay) {
     draw(1000);
