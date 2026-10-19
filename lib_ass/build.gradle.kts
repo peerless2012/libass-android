@@ -35,6 +35,12 @@ android {
             }
         }
         release {
+            externalNativeBuild {
+                cmake {
+                    // AGP defaults to RelWithDebInfo for release variants
+                    arguments += listOf("-DCMAKE_BUILD_TYPE=Release")
+                }
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
