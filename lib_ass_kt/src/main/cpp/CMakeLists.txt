@@ -27,9 +27,11 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 add_library(${CMAKE_PROJECT_NAME} SHARED AssKt.c)
 # Add these two lines.
 find_package(lib_ass REQUIRED CONFIG)
+add_subdirectory(overlay)
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME "asskt")
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
         lib_ass::ass
+        ass_overlay
         android
         jnigraphics
         GLESv2

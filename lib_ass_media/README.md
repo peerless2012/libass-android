@@ -4,13 +4,14 @@ A media3 extension library for libass.
 Apps that use media3 can use this module to add libass into their player.
 
 ## Feature
-There are three ways to render ass subtitles which are defined in `AssRenderType`.
+There are multiple ways to render ass subtitles which are defined in `AssRenderType`.
 
 | Type | Feature | Anim | HDR/DV | Block render/UI |
 | :----: | :----: | :----: | :----: | :----: |
 | CUES | SubtitleView & Cue | ❌ | ✅ | ❌ |
 | EFFECTS_CANVAS | Effect | ✅ | ❓ | ✅ |
 | EFFECTS_OPEN_GL | Effect | ✅ | ❓ | ✅ |
+| EFFECTS_ATLAS | Effect | ✅ | ❓ | ✅ |
 | OVERLAY_CANVAS | Overlay | ✅ | ✅ | ✅ |
 | OVERLAY_OPEN_GL | Overlay | ✅ | ✅ | ❌ |
 
@@ -36,14 +37,17 @@ Just like `EFFECTS_CANVAS`, but uses OpenGL to render. and the offscreen text is
 
 According to tests, the `EFFECTS_OPEN_GL` will take a 1/3 of the time to render.
 
-### 4. OVERLAY_CANVAS
+### 4. EFFECTS_ATLAS
+The fastest render type. It use OpenGL to render, but it use a atlas to push the libass bitmap to the GPU which makes it much more performant than any other mode. It have similar performance to mpv.
+
+### 5. OVERLAY_CANVAS
 The ass/ssa subtitles will be calculated at runtime, and an `Overlay` widget is added in `SubtitleView` to render the subtitles.
 
 The `libass` render result will copy into a bitmap, and draw in the `Canvas`.
 
 This will block UI thread when rendering.
 
-### 4. OVERLAY_OPEN_GL
+### 6. OVERLAY_OPEN_GL
 Just like `OVERLAY_CANVAS`, but the `libass` render result will passed to `OpenGL` as a texture to avoid creating temporary bitmap.
 
 It uses about half as much memory as `OVERLAY_CANVAS`.
@@ -123,7 +127,7 @@ player = ExoPlayer.Builder(this)
 | :----: | :----: | :---- |
 | `glyphSize` | 10000 | Maximum number of glyph cache entries in libass |
 | `cacheSize` | 128 | Maximum bitmap cache size in MB for libass |
-| `maxRenderPixels` | 0 | Maximum pixel count for subtitle rendering (0 = no limit) |
+| `maxRenderPixels` | 0 | Maximum pixel count for subtitle rendering (0 = no limit). Ignored by `EFFECTS_ATLAS` |
 
 ### Render Downscaling (`maxRenderPixels`)
 
@@ -157,5 +161,6 @@ Actual render size: 1920 x 1080
 - **OVERLAY_OPEN_GL**: Renders at reduced size, scales `glViewport` coordinates to surface size
 - **OVERLAY_CANVAS**: Renders at reduced size, uses `drawBitmap` with scaled `RectF`
 - **EFFECTS_OPEN_GL**: Creates smaller FBO, uses `getVertexTransformation` to scale up in the OverlayEffect pipeline
+- **EFFECTS_ATLAS**: It always renders at video size
 - **EFFECTS_CANVAS**: Renders at reduced size, scales canvas draw coordinates
 - **CUES**: Not affected (pre-renders all subtitles at parse time)

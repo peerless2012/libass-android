@@ -11,7 +11,7 @@ appcompat = "1.7.1"
 material = "1.12.0"
 activity = "1.10.1"
 constraintlayout = "2.2.1"
-media3 = "1.8.0"
+media3 = "1.11.1"
 publish = "0.34.0"
 
 [libraries]

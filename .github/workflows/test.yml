@@ -6,6 +6,35 @@ on:
   pull_request:
 
 jobs:
+  # The EFFECTS_ATLAS overlay's unit tests.
+  overlay-tests:
+    name: "Overlay unit tests"
+    # For Mesa 26.0+: before it, llvmpipe rounds some 8-bit blends down instead of to nearest, which the
+    # exact blending tests catch.
+    runs-on: ubuntu-26.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build pkg-config libass-dev \
+          libegl-dev libgles-dev libegl-mesa0 libgl1-mesa-dri
+
+    - name: Build
+      run: |
+        cmake -S lib_ass_kt/src/main/cpp/overlay -B overlay-build -G Ninja
+        cmake --build overlay-build
+
+    - name: Run tests
+      env:
+        LIBGL_ALWAYS_SOFTWARE: "1"
+        # Without a GLES context, the GL tests fail rather than skip.
+        ASS_OVERLAY_REQUIRE_GL: "1"
+      run: ctest --test-dir overlay-build --output-on-failure
+
   run-tests:
     name: "Test (${{ matrix.arch }})"
     runs-on: ubuntu-latest
@@ -34,6 +63,6 @@ jobs:
     - name: Run tests
       uses: reactivecircus/android-emulator-runner@v2
       with:
-        api-level: 21
+        api-level: 23
         arch: ${{ matrix.arch }}
         script: ./gradlew test connectedAndroidTest
