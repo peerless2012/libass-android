@@ -21,6 +21,7 @@ open class AssMatroskaExtractor(
 
     private var currentAttachmentName: String? = null
     private var currentAttachmentMime: String? = null
+    private var currentAttachmentData: ByteArray? = null
 
     internal val subtitleSample = subtitleSampleField.get(this) as ParsableByteArray
 
@@ -66,7 +67,16 @@ open class AssMatroskaExtractor(
                 assHandler.setVideoSize(track.width, track.height)
                 super.endMasterElement(id)
             }
-            ID_ATTACHED_FILE -> clearAttachment()
+            ID_ATTACHED_FILE -> {
+                val attachmentName = requireNotNull(currentAttachmentName)
+                val attachmentMime = requireNotNull(currentAttachmentMime)
+                val attachmentData = requireNotNull(currentAttachmentData)
+
+                if (attachmentMime in fontMimeTypes) {
+                    assHandler.addFont(attachmentName, attachmentData)
+                }
+                clearAttachment()
+            }
             else -> super.endMasterElement(id)
         }
     }
@@ -82,16 +92,8 @@ open class AssMatroskaExtractor(
     override fun binaryElement(id: Int, contentSize: Int, input: ExtractorInput) {
         when (id) {
             ID_FILE_DATA -> {
-                val attachmentName = requireNotNull(currentAttachmentName)
-                val attachmentMime = requireNotNull(currentAttachmentMime)
-
-                if (attachmentMime in fontMimeTypes) {
-                    val data = ByteArray(contentSize)
-                    input.readFully(data, 0, contentSize)
-                    assHandler.addFont(attachmentName, data)
-                } else {
-                    input.skipFully(contentSize)
-                }
+                currentAttachmentData = ByteArray(contentSize)
+                input.readFully(currentAttachmentData!!, 0, contentSize)
             }
             else -> super.binaryElement(id, contentSize, input)
         }
@@ -100,6 +102,7 @@ open class AssMatroskaExtractor(
     private fun clearAttachment() {
         currentAttachmentName = null
         currentAttachmentMime = null
+        currentAttachmentData = null
     }
 
     companion object {
