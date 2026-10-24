@@ -72,7 +72,11 @@ open class AssMatroskaExtractor(
                 val attachmentMime = requireNotNull(currentAttachmentMime)
                 val attachmentData = requireNotNull(currentAttachmentData)
 
-                if (attachmentMime in fontMimeTypes) {
+                // Detect fonts like the spec says: https://github.com/ietf-wg-cellar/matroska-specification/blob/1a943ead9bb4c67b02b966cebafe51c8c074e703/cellar-matroska/attachments.md?plain=1#L87-L111
+                val isFont = attachmentMime in fontMimeTypes ||
+                    (attachmentMime == "application/octet-stream" &&
+                        fontExtensions.any { attachmentName.lowercase().endsWith(it) })
+                if (isFont) {
                     assHandler.addFont(attachmentName, attachmentData)
                 }
                 clearAttachment()
@@ -126,6 +130,8 @@ open class AssMatroskaExtractor(
             "application/vnd.ms-opentype",
             "application/x-font-ttf",
         )
+
+        val fontExtensions = listOf(".ttf", ".otf", ".ttc", ".otc")
 
         val extractorOutput = MatroskaExtractor::class.java.getDeclaredField("extractorOutput").apply {
             isAccessible = true
