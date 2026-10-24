@@ -119,6 +119,7 @@ open class AssMatroskaExtractor(
         const val ID_FILE_DATA = 0x465C
 
         val fontMimeTypes = listOf(
+            "font/collection",
             "font/ttf",
             "font/otf",
             "font/sfnt",
@@ -128,7 +129,9 @@ open class AssMatroskaExtractor(
             "application/font-woff",
             "application/x-truetype-font",
             "application/vnd.ms-opentype",
+            "application/x-font",
             "application/x-font-ttf",
+            "application/x-font-otf",
         )
 
         val fontExtensions = listOf(".ttf", ".otf", ".ttc", ".otc")
