@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.widget.EditText
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -44,6 +45,12 @@ class MainActivity : AppCompatActivity() {
             counters?.ensureUpdated()
             droppedFramesView.text = "Dropped frames: ${counters?.droppedBufferCount ?: 0}"
             droppedFramesView.postDelayed(this, 500)
+        }
+    }
+
+    private val openFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            playUrl(uri.toString())
         }
     }
 
@@ -111,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         when(item.itemId) {
             R.id.menu_gc-> System.gc()
             R.id.menu_url-> switchUrl()
+            R.id.menu_open_file -> openFileLauncher.launch(arrayOf("video/*"))
             R.id.menu_audio -> selectTrack(C.TRACK_TYPE_AUDIO)
             R.id.menu_sub -> selectTrack(C.TRACK_TYPE_TEXT)
             R.id.menu_sub_add -> {
@@ -149,15 +157,19 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Set url")
             .setPositiveButton("Confirm"
             ) { dialog, which ->
-                url = urlInput.text.toString()
-                player.stop()
-                player.setMediaItem(MediaItem.fromUri(url))
-                player.prepare()
+                playUrl(urlInput.text.toString())
             }
             .setNegativeButton("Cancel", null)
             .setView(urlInput)
             .create()
             .show()
+    }
+
+    private fun playUrl(newUrl: String) {
+        url = newUrl
+        player.stop()
+        player.setMediaItem(MediaItem.fromUri(url))
+        player.prepare()
     }
 
     @OptIn(UnstableApi::class)
