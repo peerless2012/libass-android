@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
@@ -33,6 +34,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var player: ExoPlayer
 
     private lateinit var playerView: PlayerView
+
+    private lateinit var droppedFramesView: TextView
+
+    private val droppedFramesUpdater = object : Runnable {
+        @OptIn(UnstableApi::class)
+        override fun run() {
+            val counters = player.videoDecoderCounters
+            counters?.ensureUpdated()
+            droppedFramesView.text = "Dropped frames: ${counters?.droppedBufferCount ?: 0}"
+            droppedFramesView.postDelayed(this, 500)
+        }
+    }
 
     @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,6 +96,9 @@ class MainActivity : AppCompatActivity() {
 //            .setSubtitleConfigurations(ImmutableList.of(enConfig, jpConfig, zhConfig))
         player.setMediaItem(mediaItem.build(), 30*1000)
         player.prepare()
+
+        droppedFramesView = findViewById(R.id.main_dropped_frames)
+        droppedFramesView.post(droppedFramesUpdater)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -153,6 +169,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        droppedFramesView.removeCallbacks(droppedFramesUpdater)
         player.release()
         super.onDestroy()
     }
