@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity() {
 
     private var url = "http://192.168.3.6:8080/files/c.mkv"
 
+    private var renderType = AssRenderType.EFFECTS_ATLAS
+
     private lateinit var player: ExoPlayer
 
     private lateinit var playerView: PlayerView
@@ -68,10 +70,17 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         playerView = findViewById(R.id.main_player)
 
+        var startPosition = 0*1000L
+        if (savedInstanceState != null) {
+            url = savedInstanceState.getString(KEY_URL, url)
+            renderType = AssRenderType.valueOf(savedInstanceState.getString(KEY_RENDER_TYPE, renderType.name))
+            startPosition = savedInstanceState.getLong(KEY_POSITION)
+        }
+
         player = ExoPlayer.Builder(this)
             .buildWithAssSupport(
                 this,
-                AssRenderType.OVERLAY_OPEN_GL,
+                renderType,
                 AssHandlerConfig(maxRenderPixels = 720*480),
                 playerView.subtitleView
             )
@@ -101,7 +110,7 @@ class MainActivity : AppCompatActivity() {
         val mediaItem = MediaItem.Builder()
             .setUri(url)
 //            .setSubtitleConfigurations(ImmutableList.of(enConfig, jpConfig, zhConfig))
-        player.setMediaItem(mediaItem.build(), 30*1000)
+        player.setMediaItem(mediaItem.build(), startPosition)
         player.prepare()
 
         droppedFramesView = findViewById(R.id.main_dropped_frames)
@@ -119,6 +128,7 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_gc-> System.gc()
             R.id.menu_url-> switchUrl()
             R.id.menu_open_file -> openFileLauncher.launch(arrayOf("video/*"))
+            R.id.menu_render_type -> selectRenderType()
             R.id.menu_audio -> selectTrack(C.TRACK_TYPE_AUDIO)
             R.id.menu_sub -> selectTrack(C.TRACK_TYPE_TEXT)
             R.id.menu_sub_add -> {
@@ -165,6 +175,23 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun selectRenderType() {
+        val renderTypes = AssRenderType.entries
+        AlertDialog.Builder(this)
+            .setTitle("Render type")
+            .setSingleChoiceItems(renderTypes.map { it.name }.toTypedArray(), renderTypes.indexOf(renderType)) { dialog, which ->
+                dialog.dismiss()
+                if (renderTypes[which] != renderType) {
+                    // The render type is fixed when the player is built, so recreate the activity to rebuild it.
+                    renderType = renderTypes[which]
+                    recreate()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+            .show()
+    }
+
     private fun playUrl(newUrl: String) {
         url = newUrl
         player.stop()
@@ -180,10 +207,23 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(KEY_URL, url)
+        outState.putString(KEY_RENDER_TYPE, renderType.name)
+        outState.putLong(KEY_POSITION, player.currentPosition)
+    }
+
     override fun onDestroy() {
         droppedFramesView.removeCallbacks(droppedFramesUpdater)
         player.release()
         super.onDestroy()
+    }
+
+    companion object {
+        private const val KEY_URL = "url"
+        private const val KEY_RENDER_TYPE = "render_type"
+        private const val KEY_POSITION = "position"
     }
 
 }
