@@ -31,3 +31,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# cmake build dir
+lib_ass_kt/src/main/cpp/overlay/builddir/

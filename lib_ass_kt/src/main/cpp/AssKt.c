@@ -6,11 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <jni.h>
 #include "ass/ass.h"
 #include "fontconfig/fontconfig.h"
 #include "GLES2/gl2.h"
 #include "GLES2/gl2ext.h"
+#include "AssOverlay.h"
 
 #define LOG_TAG "SubtitleRenderer"
 
@@ -361,6 +361,16 @@ void nativeAssRenderDeinit(JNIEnv* env, jclass clazz, jlong render) {
     }
 }
 
+jlong nativeAssOverlayDraw(JNIEnv* env, jclass clazz, jlong overlay, jlong render, jlong track,
+    jint fbo, jint frameWidth, jint frameHeight, jlong timeMs) {
+    return (jlong) assOverlayDraw((AssOverlay *) overlay, (ASS_Renderer *) render, (ASS_Track *) track,
+        (unsigned int) fbo, frameWidth, frameHeight, timeMs);
+}
+
+void nativeAssOverlayRelease(JNIEnv* env, jclass clazz, jlong overlay) {
+    assOverlayRelease((AssOverlay *) overlay);
+}
+
 static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderInit", "(J)J", (void*)nativeAssRenderInit},
         {"nativeAssRenderSetFontScale", "(JF)V", (void*)nativeAssRenderSetFontScale},
@@ -369,6 +379,8 @@ static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
         {"nativeAssRenderFrame", "(JJJI)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
         {"nativeAssRenderDeinit", "(J)V", (void*)nativeAssRenderDeinit},
+        {"nativeAssOverlayDraw", "(JJJIIIJ)J", (void*) nativeAssOverlayDraw},
+        {"nativeAssOverlayRelease", "(J)V", (void*) nativeAssOverlayRelease},
 };
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     JNIEnv *env = NULL;

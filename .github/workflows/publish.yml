@@ -18,6 +18,13 @@ jobs:
       with:
         libass-cmake-path: ${{ github.workspace }}/lib_ass/src/main/cpp/libass-cmake
 
+    # Gradle 8.14 can't run on the runner's default JDK (25).
+    - name: Set up JDK 21
+      uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: "21"
+
     - name: Publish to Maven Central Repository
       run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
       env:
