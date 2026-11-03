@@ -19,6 +19,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.DefaultTrackNameProvider
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TrackSelectionDialogBuilder
 import com.google.android.material.appbar.MaterialToolbar
@@ -201,8 +202,15 @@ class MainActivity : AppCompatActivity() {
 
     @OptIn(UnstableApi::class)
     private fun selectTrack(trackType: Int) {
+        val defaultTrackNameProvider = DefaultTrackNameProvider(resources)
         TrackSelectionDialogBuilder(this, "Select track", player, trackType)
             .setShowDisableOption(true)
+            .setTrackNameProvider { format ->
+                // The default provider only shows the label when the track has no language.
+                val name = defaultTrackNameProvider.getTrackName(format)
+                val label = format.label
+                if (label.isNullOrBlank() || name.contains(label)) name else "$label ($name)"
+            }
             .build()
             .show()
     }
