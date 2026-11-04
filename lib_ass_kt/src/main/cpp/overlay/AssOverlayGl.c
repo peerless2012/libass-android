@@ -438,7 +438,8 @@ static bool ensureVertices(AssOverlayGl* gl, int count) {
     return true;
 }
 
-bool assOverlayGlSetQuads(AssOverlayGl* gl, const AssAtlas* atlas, int frameW, int frameH) {
+bool assOverlayGlSetQuads(AssOverlayGl* gl, const AssAtlas* atlas, const AssColorMangle* colorMangle,
+    int frameW, int frameH) {
     const int count = atlas->pieceCount * VERTICES_PER_PIECE;
     if (!ensureVertices(gl, count)) {
         return false;
@@ -463,7 +464,7 @@ bool assOverlayGlSetQuads(AssOverlayGl* gl, const AssAtlas* atlas, int frameW, i
             const float v0 = (float) p->atlasY * sv;
             const float v1 = (float) (p->atlasY + p->h) * sv;
             uint8_t r, g, b, a;
-            unpackColor(p->color, &r, &g, &b, &a);
+            unpackColor(assColorMangle(colorMangle, p->color), &r, &g, &b, &a);
             out[0] = (AssOverlayVertex) {x0, y0, u0, v0, r, g, b, a};
             out[1] = (AssOverlayVertex) {x1, y0, u1, v0, r, g, b, a};
             out[2] = (AssOverlayVertex) {x0, y1, u0, v1, r, g, b, a};

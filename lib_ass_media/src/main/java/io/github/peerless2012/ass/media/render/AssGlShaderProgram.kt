@@ -88,6 +88,7 @@ class AssGlShaderProgram(
                 fbo,
                 inputTexture.width,
                 inputTexture.height,
+                handler.videoColorSpace,
                 mediaTimeUs / 1000
             )
             val elapsedMs = (System.nanoTime() - startNs) / 1_000_000

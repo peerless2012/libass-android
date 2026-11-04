@@ -362,9 +362,9 @@ void nativeAssRenderDeinit(JNIEnv* env, jclass clazz, jlong render) {
 }
 
 jlong nativeAssOverlayDraw(JNIEnv* env, jclass clazz, jlong overlay, jlong render, jlong track,
-    jint fbo, jint frameWidth, jint frameHeight, jlong timeMs) {
+    jint fbo, jint frameWidth, jint frameHeight, jint videoColorSpace, jlong timeMs) {
     return (jlong) assOverlayDraw((AssOverlay *) overlay, (ASS_Renderer *) render, (ASS_Track *) track,
-        (unsigned int) fbo, frameWidth, frameHeight, timeMs);
+        (unsigned int) fbo, frameWidth, frameHeight, (AssVideoColorSpace) videoColorSpace, timeMs);
 }
 
 void nativeAssOverlayRelease(JNIEnv* env, jclass clazz, jlong overlay) {
@@ -379,7 +379,7 @@ static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
         {"nativeAssRenderFrame", "(JJJI)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
         {"nativeAssRenderDeinit", "(J)V", (void*)nativeAssRenderDeinit},
-        {"nativeAssOverlayDraw", "(JJJIIIJ)J", (void*) nativeAssOverlayDraw},
+        {"nativeAssOverlayDraw", "(JJJIIIIJ)J", (void*) nativeAssOverlayDraw},
         {"nativeAssOverlayRelease", "(J)V", (void*) nativeAssOverlayRelease},
 };
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {

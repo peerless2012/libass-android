@@ -3,9 +3,11 @@
 #include <cstdarg>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 #include "AssGlTest.h"
 #include "AssOverlay.h"
+#include "AssTestImages.h"
 
 namespace {
 
@@ -54,6 +56,14 @@ Dialogue: 1,0:00:00.00,0:00:03.00,Sign,,0,0,0,,{\pos(160,90)\an5\t(0,3000,\fscx2
 Dialogue: 2,0:00:00.00,0:00:03.00,Sign,,0,0,0,,{\move(0,120,280,120)\blur2\clip(40,100,240,160)\p1}m 0 0 l 40 0 20 32{\p0}
 Dialogue: 0,0:00:02.50,0:00:04.00,Default,,0,0,0,,The end
 )";
+
+// A script with a "YCbCr Matrix" header added.
+std::string withYcbcrMatrix(const char* script, const char* header) {
+    std::string text = script;
+    const std::string after = "ScaledBorderAndShadow: yes\n";
+    text.insert(text.find(after) + after.size(), std::string("YCbCr Matrix: ") + header + "\n");
+    return text;
+}
 
 // libass's warnings and errors, as its default callback would print them; not its chatter.
 void onLibassMessage(int level, const char* format, va_list args, void*) {
@@ -110,20 +120,20 @@ protected:
     }
 
     // Replaces the track, before the first draw.
-    void readTrack(const char* script) {
+    void readTrack(std::string script) {
         if (track != nullptr) {
             ass_free_track(track);
         }
-        std::string text = script;
-        track = ass_read_memory(library, text.data(), text.size(), nullptr);
+        track = ass_read_memory(library, script.data(), script.size(), nullptr);
         ASSERT_NE(track, nullptr);
     }
 
-    // Draws the track at timeMs onto a new frameW x frameH video frame, and expects the frame to show
-    // what libass renders for it.
-    Drawn draw(long long timeMs, int frameW = 64, int frameH = 48) {
+    // Draws the track at timeMs onto a new frameW x frameH video frame of the given color space, and
+    // expects the frame to show what libass renders for it, its colors mangled for the video. The
+    // tracks have no "YCbCr Matrix" header, which is TV.601: on a BT.601 TV video, colors are kept.
+    Drawn draw(long long timeMs, int frameW = 64, int frameH = 48, AssVideoColorSpace video = ASS_VIDEO_BT601_TV) {
         const VideoFrame frame(frameW, frameH);
-        overlay = assOverlayDraw(overlay, renderer, track, frame.fbo(), frameW, frameH, timeMs);
+        overlay = assOverlayDraw(overlay, renderer, track, frame.fbo(), frameW, frameH, video, timeMs);
         EXPECT_NE(overlay, nullptr);
         EXPECT_EQ(glGetError(), (GLenum) GL_NO_ERROR);
 
@@ -136,10 +146,14 @@ protected:
         }
         Drawn drawn{-1, 0};
         const ASS_Image* images = ass_render_frame(mirror, track, timeMs, &drawn.changed);
+        const AssColorMangle mangle = assColorMangleInit(track->YCbCrMatrix, video);
+        ImageList mangled;
         for (const ASS_Image* img = images; img != nullptr; img = img->next) {
             drawn.images++;
+            mangled.addRaw(img->w, img->h, img->stride, img->bitmap, img->dst_x, img->dst_y,
+                assColorMangle(&mangle, img->color));
         }
-        expectFrame(frame.read(), expectedFrame(images, frameW, frameH), frameW);
+        expectFrame(frame.read(), expectedFrame(mangled.head(), frameW, frameH), frameW);
         return drawn;
     }
 
@@ -233,14 +247,38 @@ TEST_F(AssOverlayTest, FollowsFrameSizeChanges) {
 // Without a renderer or a track, the overlay is still created, for the next call, but draws nothing.
 TEST_F(AssOverlayTest, DrawsNothingWithoutARendererOrATrack) {
     const VideoFrame frame(64, 48);
-    overlay = assOverlayDraw(nullptr, nullptr, track, frame.fbo(), 64, 48, 1000);
+    overlay = assOverlayDraw(nullptr, nullptr, track, frame.fbo(), 64, 48, ASS_VIDEO_BT601_TV, 1000);
     ASSERT_NE(overlay, nullptr);
-    EXPECT_EQ(assOverlayDraw(overlay, renderer, nullptr, frame.fbo(), 64, 48, 1000), overlay);
+    EXPECT_EQ(assOverlayDraw(overlay, renderer, nullptr, frame.fbo(), 64, 48, ASS_VIDEO_BT601_TV, 1000), overlay);
     EXPECT_EQ(glGetError(), (GLenum) GL_NO_ERROR);
     expectFrame(frame.read(), expectedFrame(nullptr, 64, 48), 64);
 
     // It draws once it has both.
     EXPECT_GT(draw(1000).images, 0) << kNoImages;
+}
+
+// Subtitle colors are mangled for the video, as the track's "YCbCr Matrix" header asks.
+TEST_F(AssOverlayTest, ManglesColorsForTheVideo) {
+    readTrack(withYcbcrMatrix(kScript, "TV.709"));
+    ASSERT_EQ(track->YCbCrMatrix, YCBCR_BT709_TV);
+    ASSERT_TRUE(assColorMangleInit(track->YCbCrMatrix, ASS_VIDEO_BT601_PC).enabled);
+    EXPECT_GT(draw(1000, 64, 48, ASS_VIDEO_BT601_PC).images, 0) << kNoImages;
+}
+
+// "YCbCr Matrix: None" keeps the colors whatever the video.
+TEST_F(AssOverlayTest, KeepsColorsForNone) {
+    readTrack(withYcbcrMatrix(kScript, "None"));
+    ASSERT_EQ(track->YCbCrMatrix, YCBCR_NONE);
+    EXPECT_GT(draw(1000, 64, 48, ASS_VIDEO_BT709_TV).images, 0) << kNoImages;
+}
+
+// When the video's color space changes, the subtitles libass reports unchanged are drawn with colors
+// mangled for the new one.
+TEST_F(AssOverlayTest, FollowsVideoColorSpaceChanges) {
+    ASSERT_GT(draw(1000, 64, 48, ASS_VIDEO_BT601_TV).images, 0) << kNoImages;
+    EXPECT_EQ(draw(1000, 64, 48, ASS_VIDEO_BT709_TV).changed, 0);
+    EXPECT_EQ(draw(1000, 64, 48, ASS_VIDEO_BT709_PC).changed, 0);
+    EXPECT_EQ(draw(1000, 64, 48, ASS_VIDEO_BT601_TV).changed, 0);
 }
 
 // The scene drawn frame by frame at 23.976 fps, as a video plays.

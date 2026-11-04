@@ -74,13 +74,13 @@ static void updateAtlas(AssOverlay* overlay, const ASS_Image* images, int change
     if (atlas->pieceCount == 0) {
         return;
     }
-    if (!assOverlayGlSetQuads(&overlay->gl, atlas, overlay->frameW, overlay->frameH)) {
+    if (!assOverlayGlSetQuads(&overlay->gl, atlas, &overlay->colorMangle, overlay->frameW, overlay->frameH)) {
         assAtlasTruncate(atlas, 0);
     }
 }
 
 AssOverlay* assOverlayDraw(AssOverlay* overlay, ASS_Renderer* render, ASS_Track* track,
-    unsigned int fbo, int frameWidth, int frameHeight, long long timeMs) {
+    unsigned int fbo, int frameWidth, int frameHeight, AssVideoColorSpace videoColorSpace, long long timeMs) {
 
     if (overlay == NULL) {
         overlay = createOverlay();
@@ -107,9 +107,14 @@ AssOverlay* assOverlayDraw(AssOverlay* overlay, ASS_Renderer* render, ASS_Track*
     const long long start = nowMs();
     const ASS_Image* images = ass_render_frame(render, track, timeMs, &changed);
     const long long rendered = nowMs();
-    // The atlas starts empty, whatever libass reports.
-    if (!overlay->hasRendered) {
+    // The atlas starts empty, whatever libass reports. And the quads carry the mangled colors, so
+    // they're rebuilt when the mangling changes.
+    if (!overlay->hasRendered || track->YCbCrMatrix != overlay->ycbcrMatrix
+        || videoColorSpace != overlay->videoColorSpace) {
         overlay->hasRendered = true;
+        overlay->ycbcrMatrix = track->YCbCrMatrix;
+        overlay->videoColorSpace = videoColorSpace;
+        overlay->colorMangle = assColorMangleInit(track->YCbCrMatrix, videoColorSpace);
         changed = 2;
     }
     updateAtlas(overlay, images, changed);

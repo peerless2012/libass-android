@@ -39,7 +39,8 @@ protected:
         frame = std::make_unique<VideoFrame>(frameW, frameH);
         assAtlasPack(&atlas, images.head());
         EXPECT_EQ(assOverlayGlUpload(&gl, &atlas), atlas.pageCount);
-        EXPECT_TRUE(assOverlayGlSetQuads(&gl, &atlas, frameW, frameH));
+        const AssColorMangle noMangle{};
+        EXPECT_TRUE(assOverlayGlSetQuads(&gl, &atlas, &noMangle, frameW, frameH));
         assOverlayGlDraw(&gl, &atlas, frame->fbo(), frameW, frameH);
         EXPECT_EQ(glGetError(), (GLenum) GL_NO_ERROR);
         return frame->read();

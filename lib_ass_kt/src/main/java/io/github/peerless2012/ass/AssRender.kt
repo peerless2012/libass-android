@@ -36,7 +36,7 @@ class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
         external fun nativeAssRenderDeinit(render: Long)
 
         @JvmStatic
-        external fun nativeAssOverlayDraw(overlay: Long, render: Long, track: Long, fbo: Int, frameWidth: Int, frameHeight: Int, timeMs: Long): Long
+        external fun nativeAssOverlayDraw(overlay: Long, render: Long, track: Long, fbo: Int, frameWidth: Int, frameHeight: Int, videoColorSpace: Int, timeMs: Long): Long
 
         @JvmStatic
         external fun nativeAssOverlayRelease(overlay: Long)
@@ -95,13 +95,14 @@ class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
 
     // Only for EFFECTS_ATLAS. Draws onto `fbo` with `overlay`, the handle the previous call returned (0
     // the first time), and returns the handle to pass next. An overlay's GL objects belong to the GL
-    // context it was created in, so the caller keeps one per context.
-    fun drawOverlayFrame(overlay: Long, fbo: Int, frameWidth: Int, frameHeight: Int, timeMs: Long): Long {
+    // context it was created in, so the caller keeps one per context. Subtitle colors are mangled for
+    // `videoColorSpace`, the video frame's color space.
+    fun drawOverlayFrame(overlay: Long, fbo: Int, frameWidth: Int, frameHeight: Int, videoColorSpace: AssVideoColorSpace, timeMs: Long): Long {
         lock.withLock {
             if (released || nativeRender == 0L) return overlay
             val t = track ?: return overlay
             if (t.released || t.nativeAssTrack == 0L) return overlay
-            return nativeAssOverlayDraw(overlay, nativeRender, t.nativeAssTrack, fbo, frameWidth, frameHeight, timeMs)
+            return nativeAssOverlayDraw(overlay, nativeRender, t.nativeAssTrack, fbo, frameWidth, frameHeight, videoColorSpace.ordinal, timeMs)
         }
     }
 

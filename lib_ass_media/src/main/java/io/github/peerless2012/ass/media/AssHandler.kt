@@ -3,6 +3,7 @@ package io.github.peerless2012.ass.media
 import android.os.Handler
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -16,6 +17,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.AssTrack
 import io.github.peerless2012.ass.Ass
+import io.github.peerless2012.ass.AssVideoColorSpace
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssFrameTimeMapper
 import io.github.peerless2012.ass.media.render.AssOverlayManager
@@ -60,6 +62,12 @@ class AssHandler(
 
     /** The size of the video track. */
     var videoSize = Size.ZERO
+        private set
+
+    /** The color space of the video, which [AssRenderType.EFFECTS_ATLAS] mangles subtitle colors for.
+     * Read on the GL thread. */
+    @Volatile
+    var videoColorSpace = AssVideoColorSpace.BT709_TV
         private set
 
     /** The size of the surface on which subtitles are rendered. */
@@ -145,6 +153,7 @@ class AssHandler(
         val selectedVideoTrack = getSelectedVideoTrack(tracks)
         if (selectedVideoTrack != null) {
             setVideoSize(selectedVideoTrack.width, selectedVideoTrack.height)
+            videoColorSpace = getVideoColorSpace(selectedVideoTrack)
         }
 
         format = getSelectedAssTrack(tracks)
@@ -342,6 +351,24 @@ class AssHandler(
                 false
             }
         }?.getTrackFormat(0)
+    }
+
+    /**
+     * Retrieves the color space the decoder converts the video to RGB with. When the video doesn't
+     * tell, it's what Android's decoders assume (ColorUtils::setDefaultCodecColorAspectsIfNeeded):
+     * BT.2020 from 4K on, BT.601 up to 720x576, BT.709 in between, and limited range.
+     * @param format The format of the video track.
+     */
+    private fun getVideoColorSpace(format: Format): AssVideoColorSpace {
+        // Same guess as Aegisub when the video doesn't specify its matrix
+        val colorSpace = format.colorInfo?.colorSpace?.takeIf { it != Format.NO_VALUE }
+            ?: if (format.width > 1024 || format.height >= 600) C.COLOR_SPACE_BT709 else C.COLOR_SPACE_BT601
+        val fullRange = format.colorInfo?.colorRange == C.COLOR_RANGE_FULL
+        return when (colorSpace) {
+            C.COLOR_SPACE_BT601 -> if (fullRange) AssVideoColorSpace.BT601_PC else AssVideoColorSpace.BT601_TV
+            C.COLOR_SPACE_BT2020 -> if (fullRange) AssVideoColorSpace.BT2020_PC else AssVideoColorSpace.BT2020_TV
+            else -> if (fullRange) AssVideoColorSpace.BT709_PC else AssVideoColorSpace.BT709_TV
+        }
     }
 
     /**
