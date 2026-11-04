@@ -47,7 +47,7 @@ abstract class AssSubtitleParser(
             }
 
             val cues = mutableListOf<Cue>()
-            val frames = assHandler.render?.renderFrame(event.start + fadeIn, AssTexType.BITMAP_RGBA)
+            val frames = assHandler.render?.renderFrame(event.start + fadeIn, AssTexType.BITMAP_RGBA, assHandler.videoColorSpace)
             frames?.images?.let { texts ->
                 texts.forEach { tex ->
                     tex.bitmap?.let { bitmap ->

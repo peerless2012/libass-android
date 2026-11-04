@@ -316,7 +316,7 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
 
         override fun onDrawFrame(timestampNanos: Long): Boolean {
             val texType = if (useNativeTexture) AssTexType.TEXTURE else AssTexType.BITMAP_ALPHA
-            val assFrame = assHandler.render?.renderFrame(timestampNanos / 1000, texType)
+            val assFrame = assHandler.render?.renderFrame(timestampNanos / 1000, texType, assHandler.videoColorSpace)
 
             // if content not change, just return the tex
             val force = forceNextRender

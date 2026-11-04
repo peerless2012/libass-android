@@ -64,8 +64,7 @@ class AssHandler(
     var videoSize = Size.ZERO
         private set
 
-    /** The color space of the video, which [AssRenderType.EFFECTS_ATLAS] mangles subtitle colors for.
-     * Read on the GL thread. */
+    /** The color space of the video, which subtitle colors are mangled for. Read on the render threads. */
     @Volatile
     var videoColorSpace = AssVideoColorSpace.BT709_TV
         private set

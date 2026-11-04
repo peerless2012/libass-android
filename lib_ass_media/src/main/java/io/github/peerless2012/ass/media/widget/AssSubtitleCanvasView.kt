@@ -93,7 +93,7 @@ class AssSubtitleCanvasView : View, AssSubtitleRender {
     }
 
     override fun requestRender(timestampNanos: Long) {
-        assExecutor?.asyncRenderFrame(timestampNanos, AssTexType.BITMAP_ALPHA, assRenderCallback)
+        assExecutor?.asyncRenderFrame(timestampNanos, AssTexType.BITMAP_ALPHA, assHandler.videoColorSpace, assRenderCallback)
     }
 
     override fun onDraw(canvas: Canvas) {

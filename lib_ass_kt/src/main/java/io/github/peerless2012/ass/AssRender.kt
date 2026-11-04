@@ -30,7 +30,13 @@ class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
         external fun nativeAssRenderSetFrameSize(render: Long, width: Int, height: Int)
 
         @JvmStatic
-        external fun nativeAssRenderFrame(render: Long, track: Long, time: Long, type: Int): AssFrame?
+        external fun nativeAssRenderFrame(render: Long, track: Long, time: Long, type: Int, videoColorSpace: Int, colorMangle: Long): AssFrame?
+
+        @JvmStatic
+        external fun nativeAssRenderColorMangleInit(): Long
+
+        @JvmStatic
+        external fun nativeAssRenderColorMangleRelease(colorMangle: Long)
 
         @JvmStatic
         external fun nativeAssRenderDeinit(render: Long)
@@ -47,6 +53,10 @@ class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
     @Volatile
     var released = false
         private set
+
+    // renderFrame's color mangling, set up again when the track's "YCbCr Matrix" header or the video's
+    // color space changes.
+    private var nativeColorMangle: Long = nativeAssRenderColorMangleInit()
 
     private var track: AssTrack? = null
 
@@ -84,12 +94,13 @@ class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
         }
     }
 
-    public fun renderFrame(time: Long, type: AssTexType): AssFrame? {
+    // Subtitle colors are mangled for `videoColorSpace`, the color space of the video they're drawn on.
+    public fun renderFrame(time: Long, type: AssTexType, videoColorSpace: AssVideoColorSpace): AssFrame? {
         lock.withLock {
-            if (released || nativeRender == 0L) return null
+            if (released || nativeRender == 0L || nativeColorMangle == 0L) return null
             val t = track ?: return null
             if (t.released || t.nativeAssTrack == 0L) return null
-            return nativeAssRenderFrame(nativeRender, t.nativeAssTrack, time, type.ordinal)
+            return nativeAssRenderFrame(nativeRender, t.nativeAssTrack, time, type.ordinal, videoColorSpace.ordinal, nativeColorMangle)
         }
     }
 
@@ -118,6 +129,10 @@ class AssRender(nativeAss: Long, private val lock: ReentrantLock) {
             if (released) return
             released = true
             track = null
+            if (nativeColorMangle != 0L) {
+                nativeAssRenderColorMangleRelease(nativeColorMangle)
+                nativeColorMangle = 0
+            }
             if (nativeRender != 0L) {
                 nativeAssRenderDeinit(nativeRender)
                 nativeRender = 0

@@ -89,7 +89,7 @@ class AssTexOverlay(private val handler: AssHandler, private val render: AssRend
         } else {
             presentationTimeUs
         }
-        val assFrame = executor.renderFrame(timeUs, AssTexType.BITMAP_ALPHA)
+        val assFrame = executor.renderFrame(timeUs, AssTexType.BITMAP_ALPHA, handler.videoColorSpace)
 
         // if content not change, just return the tex
         if (assFrame != null && assFrame.changed == 0) {
