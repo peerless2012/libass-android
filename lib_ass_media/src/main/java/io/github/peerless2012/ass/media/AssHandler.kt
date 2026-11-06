@@ -116,6 +116,19 @@ class AssHandler(
     /** The player this handler is attached to. */
     private lateinit var player: ExoPlayer
 
+    /** Removed from the player in [release]. */
+    private val analyticsListener = object : AnalyticsListener {
+        // The format the decoder gets is the variant that is actually played (adaptive streams
+        // switch between the tracks of the group) and carries the colorInfo read from the stream.
+        override fun onVideoInputFormatChanged(
+            eventTime: AnalyticsListener.EventTime,
+            format: Format,
+            decoderReuseEvaluation: DecoderReuseEvaluation?
+        ) {
+            videoColorSpace = getVideoColorSpace(format)
+        }
+    }
+
     /**
      * Initializes the handler with the provided ExoPlayer instance.
      * @param player The ExoPlayer instance to attach to.
@@ -123,17 +136,7 @@ class AssHandler(
     fun init(player: ExoPlayer) {
         this.player = player
         player.addListener(this)
-        player.addAnalyticsListener(object : AnalyticsListener {
-            // The format the decoder gets is the variant that is actually played (adaptive streams
-            // switch between the tracks of the group) and carries the colorInfo read from the stream.
-            override fun onVideoInputFormatChanged(
-                eventTime: AnalyticsListener.EventTime,
-                format: Format,
-                decoderReuseEvaluation: DecoderReuseEvaluation?
-            ) {
-                videoColorSpace = getVideoColorSpace(format)
-            }
-        })
+        player.addAnalyticsListener(analyticsListener)
         handler = Handler(player.applicationLooper)
         if (renderType == AssRenderType.EFFECTS_CANVAS || renderType == AssRenderType.EFFECTS_OPEN_GL || renderType == AssRenderType.EFFECTS_ATLAS) {
             overlayManager = AssOverlayManager(this, player, renderType)
@@ -416,6 +419,10 @@ class AssHandler(
      * Releases all native resources held by this handler.
      */
     fun release() {
+        if (::player.isInitialized) {
+            player.removeListener(this)
+            player.removeAnalyticsListener(analyticsListener)
+        }
         videoTimeCallback = null
         overlayManager?.disable()
         render?.release()
