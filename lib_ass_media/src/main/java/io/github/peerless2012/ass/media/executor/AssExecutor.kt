@@ -3,6 +3,7 @@ package io.github.peerless2012.ass.media.executor
 import io.github.peerless2012.ass.AssFrame
 import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.AssTexType
+import io.github.peerless2012.ass.AssVideoColorSpace
 import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -24,7 +25,7 @@ class AssExecutor(private val render: AssRender) {
 
     private val task = AssTask(render)
 
-    public fun renderFrame(presentationTimeUs: Long, type: AssTexType): AssFrame? {
+    public fun renderFrame(presentationTimeUs: Long, type: AssTexType, videoColorSpace: AssVideoColorSpace): AssFrame? {
         var assFrame: AssFrame? = null
         if (executorBusy) {
             // render thread is busy, keep last content
@@ -33,7 +34,7 @@ class AssExecutor(private val render: AssRender) {
             // submit render task
             val future = executorService.submit{
                 executorBusy = true
-                lastFrame = render.renderFrame(presentationTimeUs / 1000, type)
+                lastFrame = render.renderFrame(presentationTimeUs / 1000, type, videoColorSpace)
                 executorBusy = false
                 lastFrame
             }
@@ -56,7 +57,7 @@ class AssExecutor(private val render: AssRender) {
         return assFrame
     }
 
-    public fun asyncRenderFrame(presentationTimeUs: Long, type: AssTexType, callback: (AssFrame?) -> Unit) {
+    public fun asyncRenderFrame(presentationTimeUs: Long, type: AssTexType, videoColorSpace: AssVideoColorSpace, callback: (AssFrame?) -> Unit) {
         if (task.executorBusy) {
             // render thread is busy, keep last content
             callback.invoke(assFrameNotChange)
@@ -64,6 +65,7 @@ class AssExecutor(private val render: AssRender) {
             task.presentationTimeUs = presentationTimeUs
             task.callback = callback
             task.type = type
+            task.videoColorSpace = videoColorSpace
             // execute render task
             executor.execute(task)
         }

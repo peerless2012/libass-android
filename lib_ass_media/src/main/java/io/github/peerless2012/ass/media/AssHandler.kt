@@ -3,6 +3,7 @@ package io.github.peerless2012.ass.media
 import android.os.Handler
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -12,10 +13,13 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DecoderReuseEvaluation
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.analytics.AnalyticsListener
 import io.github.peerless2012.ass.AssRender
 import io.github.peerless2012.ass.AssTrack
 import io.github.peerless2012.ass.Ass
+import io.github.peerless2012.ass.AssVideoColorSpace
 import io.github.peerless2012.ass.media.parser.AssHeaderParser
 import io.github.peerless2012.ass.media.render.AssFrameTimeMapper
 import io.github.peerless2012.ass.media.render.AssOverlayManager
@@ -62,6 +66,11 @@ class AssHandler(
     var videoSize = Size.ZERO
         private set
 
+    /** The color space of the video, which subtitle colors are mangled for. Read on the render threads. */
+    @Volatile
+    var videoColorSpace = AssVideoColorSpace.BT709_TV
+        private set
+
     /** The size of the surface on which subtitles are rendered. */
     var surfaceSize = Size.ZERO
         private set
@@ -104,12 +113,30 @@ class AssHandler(
     /** The playback control thread handler. */
     private lateinit var handler: Handler
 
+    /** The player this handler is attached to. */
+    private lateinit var player: ExoPlayer
+
+    /** Removed from the player in [release]. */
+    private val analyticsListener = object : AnalyticsListener {
+        // The format the decoder gets is the variant that is actually played (adaptive streams
+        // switch between the tracks of the group) and carries the colorInfo read from the stream.
+        override fun onVideoInputFormatChanged(
+            eventTime: AnalyticsListener.EventTime,
+            format: Format,
+            decoderReuseEvaluation: DecoderReuseEvaluation?
+        ) {
+            videoColorSpace = getVideoColorSpace(format)
+        }
+    }
+
     /**
      * Initializes the handler with the provided ExoPlayer instance.
      * @param player The ExoPlayer instance to attach to.
      */
     fun init(player: ExoPlayer) {
+        this.player = player
         player.addListener(this)
+        player.addAnalyticsListener(analyticsListener)
         handler = Handler(player.applicationLooper)
         if (renderType == AssRenderType.EFFECTS_CANVAS || renderType == AssRenderType.EFFECTS_OPEN_GL || renderType == AssRenderType.EFFECTS_ATLAS) {
             overlayManager = AssOverlayManager(this, player, renderType)
@@ -145,6 +172,10 @@ class AssHandler(
         val selectedVideoTrack = getSelectedVideoTrack(tracks)
         if (selectedVideoTrack != null) {
             setVideoSize(selectedVideoTrack.width, selectedVideoTrack.height)
+            // Keep the format the decoder got (onVideoInputFormatChanged): this callback also fires when
+            // only the subtitle track changes, and the decoder event won't fire again.
+            // Before the decoder gets a format, guess from the selected track: CUES may render subtitles then.
+            videoColorSpace = getVideoColorSpace(player.videoFormat ?: selectedVideoTrack)
         }
 
         format = getSelectedAssTrack(tracks)
@@ -332,7 +363,7 @@ class AssHandler(
      * Retrieves the selected video track, if any.
      */
     private fun getSelectedVideoTrack(tracks: Tracks): Format? {
-        return tracks.groups.find { group ->
+        val group = tracks.groups.find { group ->
             if (group.isSelected) {
                 (0 until group.length).any { index ->
                     val track = group.getTrackFormat(index)
@@ -341,7 +372,29 @@ class AssHandler(
             } else {
                 false
             }
-        }?.getTrackFormat(0)
+        } ?: return null
+        // With adaptive streams, several tracks of the group can be selected: which one is played
+        // is only known once the decoder gets it.
+        val index = (0 until group.length).firstOrNull { group.isTrackSelected(it) } ?: 0
+        return group.getTrackFormat(index)
+    }
+
+    /**
+     * Retrieves the color space the decoder converts the video to RGB with. When the video doesn't
+     * tell, it's what Android's decoders assume (ColorUtils::setDefaultCodecColorAspectsIfNeeded):
+     * BT.2020 from 4K on, BT.601 up to 720x576, BT.709 in between, and limited range.
+     * @param format The format of the video track.
+     */
+    private fun getVideoColorSpace(format: Format): AssVideoColorSpace {
+        // Same guess as Aegisub when the video doesn't specify its matrix
+        val colorSpace = format.colorInfo?.colorSpace?.takeIf { it != Format.NO_VALUE }
+            ?: if (format.width > 1024 || format.height >= 600) C.COLOR_SPACE_BT709 else C.COLOR_SPACE_BT601
+        val fullRange = format.colorInfo?.colorRange == C.COLOR_RANGE_FULL
+        return when (colorSpace) {
+            C.COLOR_SPACE_BT601 -> if (fullRange) AssVideoColorSpace.BT601_PC else AssVideoColorSpace.BT601_TV
+            C.COLOR_SPACE_BT2020 -> if (fullRange) AssVideoColorSpace.BT2020_PC else AssVideoColorSpace.BT2020_TV
+            else -> if (fullRange) AssVideoColorSpace.BT709_PC else AssVideoColorSpace.BT709_TV
+        }
     }
 
     /**
@@ -366,6 +419,10 @@ class AssHandler(
      * Releases all native resources held by this handler.
      */
     fun release() {
+        if (::player.isInitialized) {
+            player.removeListener(this)
+            player.removeAnalyticsListener(analyticsListener)
+        }
         videoTimeCallback = null
         overlayManager?.disable()
         render?.release()

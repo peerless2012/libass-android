@@ -23,7 +23,7 @@ if (PROJECT_IS_TOP_LEVEL AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     add_link_options(-fsanitize=address,undefined)
 endif ()
 
-add_library(ass_overlay OBJECT AssSkyline.c AssAtlas.c AssOverlay.c AssOverlayGl.c)
+add_library(ass_overlay OBJECT AssSkyline.c AssAtlas.c AssColor.c AssOverlay.c AssOverlayGl.c)
 target_include_directories(ass_overlay PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ass_overlay PUBLIC ${ASS_OVERLAY_LIBASS} PRIVATE ${ASS_OVERLAY_GL})
 if (ANDROID)

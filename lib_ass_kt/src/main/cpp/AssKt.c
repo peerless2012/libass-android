@@ -202,7 +202,7 @@ void nativeAssRenderSetStorageSize(JNIEnv* env, jclass clazz, jlong render, jint
     ass_set_storage_size((ASS_Renderer *) render, width, height);
 }
 
-jobject createBitmap(JNIEnv* env, const ASS_Image* image) {
+jobject createBitmap(JNIEnv* env, const ASS_Image* image, uint32_t color) {
     jclass bitmapConfigClass = (*env)->FindClass(env, "android/graphics/Bitmap$Config");
     jfieldID argb8888FieldID = (*env)->GetStaticFieldID(env, bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
     jobject argb8888 = (*env)->GetStaticObjectField(env, bitmapConfigClass, argb8888FieldID);
@@ -222,10 +222,10 @@ jobject createBitmap(JNIEnv* env, const ASS_Image* image) {
     }
 
     int stride = image->stride;
-    unsigned int r = (image->color >> 24) & 0xFF;
-    unsigned int g = (image->color >> 16) & 0xFF;
-    unsigned int b = (image->color >> 8) & 0xFF;
-    unsigned int opacity = 0xFF - image->color & 0xFF;
+    unsigned int r = (color >> 24) & 0xFF;
+    unsigned int g = (color >> 16) & 0xFF;
+    unsigned int b = (color >> 8) & 0xFF;
+    unsigned int opacity = 0xFF - color & 0xFF;
     for (int y = 0; y < image->h; ++y) {
         uint32_t *line = (uint32_t *)((char *)bitmapPixels + (y) * info.stride);
         for (int x = 0; x < image->w; ++x) {
@@ -297,6 +297,22 @@ jint createTexture(JNIEnv* env, const ASS_Image* image) {
     return texture;
 }
 
+// An AssRender's color mangling, and what it was set up for: it's set up again only when they change.
+typedef struct {
+    bool initialized;
+    ASS_YCbCrMatrix ycbcrMatrix;
+    AssVideoColorSpace videoColorSpace;
+    AssColorMangle mangle;
+} RenderColorMangle;
+
+jlong nativeAssRenderColorMangleInit(JNIEnv* env, jclass clazz) {
+    return (jlong) calloc(1, sizeof(RenderColorMangle));
+}
+
+void nativeAssRenderColorMangleRelease(JNIEnv* env, jclass clazz, jlong colorMangle) {
+    free((RenderColorMangle *) colorMangle);
+}
+
 static int count_ass_images(ASS_Image *images) {
     int count = 0;
     for (ASS_Image *img = images; img != NULL; img = img->next) {
@@ -305,12 +321,24 @@ static int count_ass_images(ASS_Image *images) {
     return count;
 }
 
-jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time, jint type) {
-    if (!render || !track) return NULL;
+jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong track, jlong time, jint type,
+    jint videoColorSpace, jlong colorMangle) {
+    if (!render || !track || !colorMangle) return NULL;
     int changed;
     ASS_Image *image = ass_render_frame((ASS_Renderer *) render, (ASS_Track *) track, time, &changed);
     if (image == NULL) {
         return NULL;
+    }
+    // The images carry the mangled colors, so they're sent again when the mangling changes.
+    RenderColorMangle *state = (RenderColorMangle *) colorMangle;
+    const ASS_YCbCrMatrix ycbcrMatrix = ((ASS_Track *) track)->YCbCrMatrix;
+    if (!state->initialized || ycbcrMatrix != state->ycbcrMatrix
+        || (AssVideoColorSpace) videoColorSpace != state->videoColorSpace) {
+        state->initialized = true;
+        state->ycbcrMatrix = ycbcrMatrix;
+        state->videoColorSpace = (AssVideoColorSpace) videoColorSpace;
+        state->mangle = assColorMangleInit(ycbcrMatrix, (AssVideoColorSpace) videoColorSpace);
+        changed = 2;
     }
     jclass assFrameClass = (*env)->FindClass(env, "io/github/peerless2012/ass/AssFrame");
     jmethodID assFrameConstructor = (*env)->GetMethodID(env, assFrameClass, "<init>", "([Lio/github/peerless2012/ass/AssTex;I)V");
@@ -331,18 +359,19 @@ jobject nativeAssRenderFrame(JNIEnv* env, jclass clazz, jlong render, jlong trac
 
     int index = 0;
     for (ASS_Image *img = image; img != NULL; img = img->next) {
+        const uint32_t mangledColor = assColorMangle(&state->mangle, img->color);
         jobject bitmap = NULL;
         jint tex = 0;
         if (img->w > 0 && img->h > 0) {
             if (type == 0) {
-                bitmap = createBitmap(env, img);
+                bitmap = createBitmap(env, img, mangledColor);
             } else if (type == 1) {
                 bitmap = createAlphaBitmap(env, img);
             } else if (type == 2) {
                tex = createTexture(env, img);
             }
         }
-        int32_t color = (int32_t) img->color;
+        int32_t color = (int32_t) mangledColor;
         jobject assTexObject = (*env)->NewObject(env, assTexClass, assTexConstructor, img->dst_x, img->dst_y, img->w, img->h, color, bitmap, tex);
         (*env)->SetObjectArrayElement(env, assTexArr, index, assTexObject);
         (*env)->DeleteLocalRef(env, assTexObject);
@@ -362,9 +391,9 @@ void nativeAssRenderDeinit(JNIEnv* env, jclass clazz, jlong render) {
 }
 
 jlong nativeAssOverlayDraw(JNIEnv* env, jclass clazz, jlong overlay, jlong render, jlong track,
-    jint fbo, jint frameWidth, jint frameHeight, jlong timeMs) {
+    jint fbo, jint frameWidth, jint frameHeight, jint videoColorSpace, jlong timeMs) {
     return (jlong) assOverlayDraw((AssOverlay *) overlay, (ASS_Renderer *) render, (ASS_Track *) track,
-        (unsigned int) fbo, frameWidth, frameHeight, timeMs);
+        (unsigned int) fbo, frameWidth, frameHeight, (AssVideoColorSpace) videoColorSpace, timeMs);
 }
 
 void nativeAssOverlayRelease(JNIEnv* env, jclass clazz, jlong overlay) {
@@ -377,9 +406,11 @@ static JNINativeMethod renderMethodTable[] = {
         {"nativeAssRenderSetCacheLimit", "(JII)V", (void*)nativeAssRenderSetCacheLimit},
         {"nativeAssRenderSetStorageSize", "(JII)V", (void*) nativeAssRenderSetStorageSize},
         {"nativeAssRenderSetFrameSize", "(JII)V", (void*)nativeAssRenderSetFrameSize},
-        {"nativeAssRenderFrame", "(JJJI)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
+        {"nativeAssRenderFrame", "(JJJIIJ)Lio/github/peerless2012/ass/AssFrame;", (void*) nativeAssRenderFrame},
+        {"nativeAssRenderColorMangleInit", "()J", (void*) nativeAssRenderColorMangleInit},
+        {"nativeAssRenderColorMangleRelease", "(J)V", (void*) nativeAssRenderColorMangleRelease},
         {"nativeAssRenderDeinit", "(J)V", (void*)nativeAssRenderDeinit},
-        {"nativeAssOverlayDraw", "(JJJIIIJ)J", (void*) nativeAssOverlayDraw},
+        {"nativeAssOverlayDraw", "(JJJIIIIJ)J", (void*) nativeAssOverlayDraw},
         {"nativeAssOverlayRelease", "(J)V", (void*) nativeAssOverlayRelease},
 };
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {

@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "AssAtlas.h"
+#include "AssColor.h"
 #include "GLES3/gl3.h"
 
 #ifdef __cplusplus
@@ -84,11 +85,13 @@ int assOverlayGlUpload(AssOverlayGl* gl, const AssAtlas* atlas);
  * Texture coordinates are relative to the page textures' sizes, so the pages must be uploaded first.
  * \param gl GL state holding the vertex buffer
  * \param atlas atlas whose pieces to draw
+ * \param colorMangle how the pieces' colors are mangled
  * \param frameW video frame width, in pixels
  * \param frameH video frame height, in pixels
  * \return false on OOM, or if the vertex buffer can't be filled: the quads can't be drawn then
  */
-bool assOverlayGlSetQuads(AssOverlayGl* gl, const AssAtlas* atlas, int frameW, int frameH);
+bool assOverlayGlSetQuads(AssOverlayGl* gl, const AssAtlas* atlas, const AssColorMangle* colorMangle,
+    int frameW, int frameH);
 
 /**
  * \brief Draws the quads onto `fbo`, one call per page, then restores the GL state media3 expects.

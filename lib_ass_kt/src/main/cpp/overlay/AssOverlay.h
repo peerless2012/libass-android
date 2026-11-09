@@ -2,6 +2,7 @@
 #define LIBASS_ANDROID_ASS_OVERLAY_H
 
 #include "ass/ass.h"
+#include "AssColor.h"
 #include "AssOverlayGl.h"
 
 #ifdef __cplusplus
@@ -13,6 +14,10 @@ typedef struct {
     AssAtlas atlas;
     // The video frame's pixel size: libass's frame size and the GL viewport.
     int frameW, frameH;
+    // What the colors are mangled for: the track's "YCbCr Matrix" header and the video's color space.
+    ASS_YCbCrMatrix ycbcrMatrix;
+    AssVideoColorSpace videoColorSpace;
+    AssColorMangle colorMangle;
     // Whether libass has rendered a frame for this overlay. Until then, its detect_change compares with
     // whatever the renderer rendered last, possibly for an overlay released since.
     bool hasRendered;
@@ -29,11 +34,12 @@ typedef struct {
  * \param fbo GL framebuffer wrapping the video frame's texture
  * \param frameWidth video frame width, in pixels
  * \param frameHeight video frame height, in pixels
+ * \param videoColorSpace the video's matrix and range, which subtitle colors are mangled for
  * \param timeMs time to render the track at, in milliseconds
  * \return the overlay to pass to the next call, or NULL if it can't be created
  */
 AssOverlay* assOverlayDraw(AssOverlay* overlay, ASS_Renderer* render, ASS_Track* track,
-    unsigned int fbo, int frameWidth, int frameHeight, long long timeMs);
+    unsigned int fbo, int frameWidth, int frameHeight, AssVideoColorSpace videoColorSpace, long long timeMs);
 
 /**
  * \brief Frees the overlay and its GL objects.

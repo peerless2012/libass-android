@@ -15,7 +15,7 @@ set(INSTALL_GTEST OFF)
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
-foreach (test AssAtlasTest AssOverlayGlTest AssOverlayTest AssSkylineTest)
+foreach (test AssAtlasTest AssColorTest AssOverlayGlTest AssOverlayTest AssSkylineTest)
     add_executable(${test} ${test}.cpp)
     target_link_libraries(${test} PRIVATE ass_overlay GTest::gtest_main)
     gtest_discover_tests(${test} PROPERTIES TIMEOUT 30)
