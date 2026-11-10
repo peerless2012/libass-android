@@ -63,6 +63,7 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
         fun onSurfaceDestroyed()
     }
 
+    @Volatile
     private var renderThread: AssRenderThread? = null
 
     override fun requestRender(timestampNanos: Long) {
@@ -107,7 +108,10 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
         private val MSG_SURFACE_SIZE_CHANGED = 3
         private val MSG_RELEASE = 4
 
-        private lateinit var handler: Handler
+        // Null until the looper is ready. Calls may arrive from other threads
+        // (e.g. the player thread) before start() finishes, so they must be ignored.
+        @Volatile
+        private var handler: Handler? = null
 
         private var eglDisplay: EGLDisplay = EGL14.EGL_NO_DISPLAY
         private var eglContext: EGLContext = EGL14.EGL_NO_CONTEXT
@@ -116,23 +120,28 @@ class AssSubtitleTextureView : TextureView, AssSubtitleRender, TextureView.Surfa
 
         override fun start() {
             super.start()
-            handler = Handler(looper, this)
-            handler.sendEmptyMessage(MSG_INIT)
+            // getLooper() blocks until the looper is ready
+            val h = Handler(looper, this)
+            // Queue MSG_INIT first, then publish the handler, so any MSG_DRAW
+            // from other threads is always queued after MSG_INIT.
+            h.sendEmptyMessage(MSG_INIT)
+            handler = h
         }
 
         fun requestRender(timestampNanos: Long) {
-            handler.removeMessages(MSG_DRAW)
-            handler.obtainMessage(MSG_DRAW, timestampNanos).sendToTarget()
+            val h = handler ?: return
+            h.removeMessages(MSG_DRAW)
+            h.obtainMessage(MSG_DRAW, timestampNanos).sendToTarget()
         }
 
         fun onSurfaceSizeChanged(width: Int, height: Int) {
             this.width = width
             this.height = height
-            handler.sendEmptyMessage(MSG_SURFACE_SIZE_CHANGED)
+            handler?.sendEmptyMessage(MSG_SURFACE_SIZE_CHANGED)
         }
 
         fun release() {
-            handler.sendEmptyMessage(MSG_RELEASE)
+            handler?.sendEmptyMessage(MSG_RELEASE)
         }
 
         override fun handleMessage(msg: Message): Boolean {
