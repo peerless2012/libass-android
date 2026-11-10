@@ -6,6 +6,7 @@ import io.github.peerless2012.ass.AssTexType
 import io.github.peerless2012.ass.AssVideoColorSpace
 import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -67,7 +68,11 @@ class AssExecutor(private val render: AssRender) {
             task.type = type
             task.videoColorSpace = videoColorSpace
             // execute render task
-            executor.execute(task)
+            try {
+                executor.execute(task)
+            } catch (_: RejectedExecutionException) {
+                // executor already shut down (e.g. view detached), drop this frame
+            }
         }
     }
 

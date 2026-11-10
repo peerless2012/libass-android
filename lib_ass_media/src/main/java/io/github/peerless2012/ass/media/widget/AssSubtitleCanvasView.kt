@@ -29,6 +29,8 @@ class AssSubtitleCanvasView : View, AssSubtitleRender {
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
     }
 
+    // Written on the main thread, read from the player thread in requestRender.
+    @Volatile
     private var assExecutor: AssExecutor? = null
 
     private var assFrame: AssFrame? = null
