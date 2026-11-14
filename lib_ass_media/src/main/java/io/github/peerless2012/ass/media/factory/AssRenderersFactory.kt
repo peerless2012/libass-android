@@ -11,6 +11,7 @@ import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.video.MediaCodecVideoRenderer
 import androidx.media3.exoplayer.video.VideoRendererEventListener
 import io.github.peerless2012.ass.media.AssHandler
+import io.github.peerless2012.ass.media.render.AssMediaCodecVideoRenderer
 import io.github.peerless2012.ass.media.render.AssRenderer
 import io.github.peerless2012.ass.media.render.AssVideoRendererWrapper
 import io.github.peerless2012.ass.media.type.AssRenderType
@@ -36,6 +37,9 @@ class AssRenderersFactory(private val assHandler: AssHandler, private val render
             // Only MediaCodecVideoRenderer supports video effects.
             val index = renderers.indexOfFirst { it is MediaCodecVideoRenderer }
             if (index >= 0) {
+                if (renderers[index] !is AssMediaCodecVideoRenderer) {
+                    Log.w("AssRenderersFactory", "${renderers[index].javaClass.name} isn't an AssMediaCodecVideoRenderer: EFFECTS_ATLAS will drop late frames the media3 way")
+                }
                 renderers[index] = AssVideoRendererWrapper(renderers[index], assHandler.frameTimeMapper)
             } else {
                 Log.e("AssRenderersFactory", "No MediaCodecVideoRenderer found, EFFECTS_ATLAS subtitles will be drawn at the wrong time or not at all")
